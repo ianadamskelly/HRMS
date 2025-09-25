@@ -94,6 +94,7 @@ const navItems = [
     subItems: [
         { href: "/dashboard/settings/roles", label: "Roles" },
         { href: "/dashboard/settings/employees", label: "Employees" },
+        { href: "/dashboard/settings/integrations", label: "Integrations" },
     ]
   },
 ];
