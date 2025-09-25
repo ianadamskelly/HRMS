@@ -95,6 +95,7 @@ const navItems = [
         { href: "/dashboard/settings/roles", label: "Roles" },
         { href: "/dashboard/settings/employees", label: "Employees" },
         { href: "/dashboard/settings/integrations", label: "Integrations" },
+        { href: "/dashboard/settings/templates", label: "Templates" },
     ]
   },
 ];
