@@ -26,7 +26,7 @@ const navItems = [
   { href: "/dashboard/onboarding", label: "Onboarding", icon: ClipboardList },
   { href: "/dashboard/training", label: "Training", icon: BookOpen },
   { href: "/dashboard/performance", label: "Performance", icon: TrendingUp },
-  { href: "/dashboard/compensation", label: "Compensation", icon: DollarSign },
+  { href: "/dashboard/compensation", label: "Payroll", icon: DollarSign },
   { href: "/dashboard/benefits", label: "Benefits", icon: Gift },
   { href: "/dashboard/exit-management", label: "Exit Management", icon: LogOut },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -41,7 +41,7 @@ export function DashboardNav() {
         <SidebarMenuItem key={item.href}>
           <SidebarMenuButton
             asChild
-            isActive={pathname === item.href}
+            isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')}
             tooltip={item.label}
           >
             <Link href={item.href}>
