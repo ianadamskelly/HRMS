@@ -17,6 +17,7 @@ import {
   Gift,
   LogOut,
   LayoutGrid,
+  Settings,
 } from "lucide-react";
 
 const navItems = [
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/dashboard/compensation", label: "Compensation", icon: DollarSign },
   { href: "/dashboard/benefits", label: "Benefits", icon: Gift },
   { href: "/dashboard/exit-management", label: "Exit Management", icon: LogOut },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
 export function DashboardNav() {
