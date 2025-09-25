@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -92,6 +92,7 @@ const navItems = [
     label: "Settings", 
     icon: Settings,
     subItems: [
+        { href: "/dashboard/settings/roles", label: "Roles" },
         { href: "/dashboard/settings/employees", label: "Employees" },
     ]
   },
