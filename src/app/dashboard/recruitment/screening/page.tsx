@@ -9,13 +9,15 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Mail, View } from "lucide-react";
 
 const applicants = [
-  { name: "John Doe", role: "Software Engineer", stage: "Interview", appliedOn: "2023-10-26" },
-  { name: "Jane Smith", role: "Product Manager", stage: "Offer", appliedOn: "2023-10-24" },
-  { name: "Sam Wilson", role: "UX Designer", stage: "Screening", appliedOn: "2023-10-28" },
-  { name: "Alice Johnson", role: "Data Scientist", stage: "Hired", appliedOn: "2023-10-15" },
-  { name: "Bob Brown", role: "Software Engineer", stage: "Rejected", appliedOn: "2023-10-22" },
+  { name: "John Doe", role: "Software Engineer", stage: "Interview", appliedOn: "2023-10-26", score: 92 },
+  { name: "Jane Smith", role: "Product Manager", stage: "Offer", appliedOn: "2023-10-24", score: 88 },
+  { name: "Sam Wilson", role: "UX Designer", stage: "Screening", appliedOn: "2023-10-28", score: 78 },
+  { name: "Alice Johnson", role: "Data Scientist", stage: "Hired", appliedOn: "2023-10-15", score: 95 },
+  { name: "Bob Brown", role: "Software Engineer", stage: "Rejected", appliedOn: "2023-10-22", score: 65 },
 ];
 
 const getBadgeVariant = (stage: string) => {
@@ -47,8 +49,10 @@ export default function ScreeningPage() {
                 <TableRow>
                   <TableHead>Applicant Name</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead className="text-center">Score</TableHead>
                   <TableHead>Stage</TableHead>
                   <TableHead>Applied On</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -56,10 +60,21 @@ export default function ScreeningPage() {
                   <TableRow key={index}>
                     <TableCell className="font-medium">{applicant.name}</TableCell>
                     <TableCell>{applicant.role}</TableCell>
+                    <TableCell className="text-center font-semibold">{applicant.score}</TableCell>
                     <TableCell>
                       <Badge variant={getBadgeVariant(applicant.stage)}>{applicant.stage}</Badge>
                     </TableCell>
                     <TableCell>{applicant.appliedOn}</TableCell>
+                    <TableCell className="text-right space-x-2">
+                        <Button variant="outline" size="icon">
+                            <View className="h-4 w-4" />
+                            <span className="sr-only">View Application</span>
+                        </Button>
+                        <Button variant="outline" size="icon">
+                            <Mail className="h-4 w-4" />
+                            <span className="sr-only">Email Applicant</span>
+                        </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
