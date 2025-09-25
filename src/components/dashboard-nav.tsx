@@ -88,7 +88,13 @@ const navItems = [
         { href: "/dashboard/exit-management/offboarding", label: "Offboarding" },
     ]
   },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+  { 
+    label: "Settings", 
+    icon: Settings,
+    subItems: [
+        { href: "/dashboard/settings/employees", label: "Employees" },
+    ]
+  },
 ];
 
 export function DashboardNav() {
