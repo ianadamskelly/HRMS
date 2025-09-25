@@ -3,7 +3,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription }
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 const trainingPrograms = [
     {
@@ -31,81 +36,87 @@ export default function TrainingPage() {
         <div className="flex flex-col h-full">
             <DashboardHeader title="Training & Development" />
             <main className="flex-1 p-4 md:p-6 lg:p-8">
-                <Tabs defaultValue="implementation" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="needs-assessment">Needs Assessment</TabsTrigger>
-                        <TabsTrigger value="program-design">Program Design</TabsTrigger>
-                        <TabsTrigger value="implementation">Implementation</TabsTrigger>
-                        <TabsTrigger value="evaluation">Evaluation</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="needs-assessment">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="font-headline">Needs Assessment</CardTitle>
-                                <CardDescription>Identifying skill gaps within the organization.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p>Needs assessment content will go here.</p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                    <TabsContent value="program-design">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="font-headline">Program Design</CardTitle>
-                                <CardDescription>Creating training materials and selecting delivery methods (e.g., workshops, e-learning).</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p>Program design content will go here.</p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                    <TabsContent value="implementation">
-                         <Card>
-                            <CardHeader>
-                                <CardTitle className="font-headline">Implementation</CardTitle>
-                                <CardDescription>Delivering the training.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                    {trainingPrograms.map((program, index) => (
-                                        <Card key={index} className="flex flex-col">
-                                            <CardHeader className="p-0">
-                                                <Image
-                                                    src={program.image.imageUrl}
-                                                    alt={program.title}
-                                                    width={600}
-                                                    height={400}
-                                                    className="rounded-t-lg object-cover aspect-[3/2]"
-                                                    data-ai-hint={program.image.imageHint}
-                                                />
-                                            </CardHeader>
-                                            <CardContent className="flex-1 p-6">
-                                                <CardTitle className="font-headline mb-2">{program.title}</CardTitle>
-                                                <CardDescription>{program.description}</CardDescription>
-                                                <p className="text-sm text-muted-foreground mt-4">Date: {program.date}</p>
-                                            </CardContent>
-                                            <CardFooter>
-                                                <Button className="w-full">View Details</Button>
-                                            </CardFooter>
-                                        </Card>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                    <TabsContent value="evaluation">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="font-headline">Evaluation</CardTitle>
-                                <CardDescription>Assessing the effectiveness of the training programs.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p>Evaluation content will go here.</p>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
+                <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger>Needs Assessment</AccordionTrigger>
+                        <AccordionContent>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="font-headline">Needs Assessment</CardTitle>
+                                    <CardDescription>Identifying skill gaps within the organization.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <p>Needs assessment content will go here.</p>
+                                </CardContent>
+                            </Card>
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-2">
+                        <AccordionTrigger>Program Design</AccordionTrigger>
+                        <AccordionContent>
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle className="font-headline">Program Design</CardTitle>
+                                    <CardDescription>Creating training materials and selecting delivery methods (e.g., workshops, e-learning).</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <p>Program design content will go here.</p>
+                                </CardContent>
+                            </Card>
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-3">
+                        <AccordionTrigger>Implementation</AccordionTrigger>
+                        <AccordionContent>
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle className="font-headline">Implementation</CardTitle>
+                                    <CardDescription>Delivering the training.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                        {trainingPrograms.map((program, index) => (
+                                            <Card key={index} className="flex flex-col">
+                                                <CardHeader className="p-0">
+                                                    <Image
+                                                        src={program.image.imageUrl}
+                                                        alt={program.title}
+                                                        width={600}
+                                                        height={400}
+                                                        className="rounded-t-lg object-cover aspect-[3/2]"
+                                                        data-ai-hint={program.image.imageHint}
+                                                    />
+                                                </CardHeader>
+                                                <CardContent className="flex-1 p-6">
+                                                    <CardTitle className="font-headline mb-2">{program.title}</CardTitle>
+                                                    <CardDescription>{program.description}</CardDescription>
+                                                    <p className="text-sm text-muted-foreground mt-4">Date: {program.date}</p>
+                                                </CardContent>
+                                                <CardFooter>
+                                                    <Button className="w-full">View Details</Button>
+                                                </CardFooter>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="item-4">
+                        <AccordionTrigger>Evaluation</AccordionTrigger>
+                        <AccordionContent>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="font-headline">Evaluation</CardTitle>
+                                    <CardDescription>Assessing the effectiveness of the training programs.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <p>Evaluation content will go here.</p>
+                                </CardContent>
+                            </Card>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             </main>
         </div>
     );
