@@ -25,6 +25,7 @@ import {
   LayoutGrid,
   Settings,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 
 const navItems = [
@@ -50,6 +51,17 @@ const navItems = [
         { href: "/dashboard/onboarding/orientation", label: "Orientation" },
         { href: "/dashboard/onboarding/training", label: "Training" },
         { href: "/dashboard/onboarding/socialization", label: "Socialization" },
+    ]
+  },
+  {
+    id: "time-and-attendance",
+    label: "Time & Attendance",
+    icon: Clock,
+    subItems: [
+      { href: "/dashboard/time-and-attendance/time-capture", label: "Time Capture" },
+      { href: "/dashboard/time-and-attendance/absence-management", label: "Absence Management" },
+      { href: "/dashboard/time-and-attendance/scheduling", label: "Scheduling" },
+      { href: "/dashboard/time-and-attendance/timesheet-approval", label: "Timesheet Approval" },
     ]
   },
   { 
@@ -146,7 +158,7 @@ export function DashboardNav() {
   return (
     <SidebarMenu>
       {navItems.map((item) => (
-        <SidebarMenuItem key={item.label}>
+        <SidebarMenuItem key={item.id || item.href}>
           {item.subItems ? (
              <Collapsible key={item.id} defaultOpen={isParentActive(item)}>
                 <CollapsibleTrigger asChild>
