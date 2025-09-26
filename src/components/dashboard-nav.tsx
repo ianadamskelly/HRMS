@@ -63,6 +63,7 @@ const navItems = [
       { href: "/dashboard/time-and-attendance/time-capture", label: "Time Capture" },
       { href: "/dashboard/time-and-attendance/absence-management", label: "Absence Management" },
       { href: "/dashboard/time-and-attendance/scheduling", label: "Scheduling" },
+      { href: "/dashboard/time-and-attendance/rule-engine", label: "Rule Engine" },
       { href: "/dashboard/time-and-attendance/timesheet-approval", label: "Timesheet Approval" },
     ]
   },
