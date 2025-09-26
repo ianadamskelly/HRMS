@@ -153,19 +153,19 @@ export default function ExitInterviewPage() {
                                 <div className="flex items-center space-x-2"><RadioGroupItem value="balance" id="r4" /><Label htmlFor="r4">Work-Life Balance</Label></div>
                                 <div className="flex items-center space-x-2"><RadioGroupItem value="culture" id="r5" /><Label htmlFor="r5">Company Culture</Label></div>
                             </RadioGroup>
-                            <Textarea placeholder="Additional details on reason for leaving..." />
+                            <Textarea suppressHydrationWarning placeholder="Additional details on reason for leaving..." />
                         </div>
                          <div className="space-y-4">
                             <h3 className="font-semibold">Feedback on Management</h3>
-                            <Textarea placeholder="Describe your relationship with your direct manager..." />
+                            <Textarea suppressHydrationWarning placeholder="Describe your relationship with your direct manager..." />
                         </div>
                          <div className="space-y-4">
                             <h3 className="font-semibold">Feedback on Role & Responsibilities</h3>
-                            <Textarea placeholder="How did you find your day-to-day responsibilities?" />
+                            <Textarea suppressHydrationWarning placeholder="How did you find your day-to-day responsibilities?" />
                         </div>
                          <div className="space-y-4">
                             <h3 className="font-semibold">Final Comments & Suggestions</h3>
-                            <Textarea placeholder="Is there anything else you would like to share?" />
+                            <Textarea suppressHydrationWarning placeholder="Is there anything else you would like to share?" />
                         </div>
                     </CardContent>
                      <CardFooter>
