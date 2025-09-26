@@ -2,14 +2,14 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { placeholderImages } from "@/lib/placeholder-images";
 
 const trainingPrograms = [
     {
         title: "Leadership Development",
         description: "Enhance your leadership skills and prepare for management roles.",
         date: "2023-11-15",
-        image: PlaceHolderImages[0],
+        image: placeholderImages.find(p => p.id === 'training-1') || { imageUrl: "https://picsum.photos/seed/training1/600/400", imageHint: "leadership" }
     },
     {
         title: "Advanced Project Management",
