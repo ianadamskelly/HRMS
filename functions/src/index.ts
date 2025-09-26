@@ -1,6 +1,7 @@
 // functions/src/index.ts
 
 import * as admin from "firebase-admin";
+// ⚠️ IMPORTANT: With v2 functions, you import from specific modules.
 import { onUserCreated } from "firebase-functions/v2/auth";
 
 admin.initializeApp();
@@ -10,7 +11,7 @@ admin.initializeApp();
  * Firestore profile.
  */
 export const assignDefaultRole = onUserCreated(async (event) => {
-  const user = event.data; // The user data
+  const user = event.data; // The user data from the event
   try {
     // 1. Set the custom claim for the user's role.
     await admin.auth().setCustomUserClaims(user.uid, {role: "Employee"});
