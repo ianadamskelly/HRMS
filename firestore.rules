@@ -1,6 +1,39 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Helper functions to check user roles from custom claims
+    function isAdmin() {
+      return request.auth.token.role == 'admin';
+    }
+
+    function isManager() {
+      return request.auth.token.role == 'manager';
+    }
+
+    function isEmployee() {
+      return request.auth.token.role != null; // Any authenticated user is an employee
+    }
+
+    // Only admins can read/write the list of roles
+    match /roles/{roleId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Rules for the 'employees' collection
+    match /employees/{employeeId} {
+      // Admins can read and write all employee data
+      // Employees can read their own data
+      allow read: if isAdmin() || request.auth.uid == employeeId;
+      allow write: if isAdmin();
+
+      // Managers could potentially read data for their direct reports
+      // This would require storing the manager's UID on the employee document.
+      // Example: allow read: if isManager() && get(/databases/$(database)/documents/employees/$(employeeId)).data.managerId == request.auth.uid;
+    }
+
+    // All other collections are locked down by default
     match /{document=**} {
       allow read, write: if false;
     }
