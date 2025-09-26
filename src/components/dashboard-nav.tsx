@@ -30,6 +30,7 @@ import {
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
   { 
+    id: "recruitment",
     label: "Recruitment", 
     icon: Users,
     subItems: [
@@ -41,6 +42,7 @@ const navItems = [
     ]
   },
   { 
+    id: "onboarding",
     label: "Onboarding", 
     icon: ClipboardList,
     subItems: [
@@ -51,6 +53,7 @@ const navItems = [
     ]
   },
   { 
+    id: "training",
     label: "Training", 
     icon: BookOpen,
     subItems: [
@@ -61,6 +64,7 @@ const navItems = [
     ] 
   },
   { 
+    id: "performance",
     label: "Performance", 
     icon: TrendingUp,
     subItems: [
@@ -70,6 +74,7 @@ const navItems = [
     ]
   },
   { 
+    id: "payroll",
     label: "Payroll", 
     icon: DollarSign,
     subItems: [
@@ -80,6 +85,7 @@ const navItems = [
     ]
   },
   { 
+    id: "benefits",
     label: "Benefits", 
     icon: Gift,
     subItems: [
@@ -89,6 +95,7 @@ const navItems = [
     ]
   },
   { 
+    id: "exit",
     label: "Exit Management", 
     icon: LogOut,
     subItems: [
@@ -98,6 +105,7 @@ const navItems = [
     ]
   },
   { 
+    id: "settings",
     label: "Settings", 
     icon: Settings,
     subItems: [
@@ -137,10 +145,10 @@ export function DashboardNav() {
 
   return (
     <SidebarMenu>
-      {navItems.map((item, index) => (
-        <SidebarMenuItem key={index}>
+      {navItems.map((item) => (
+        <SidebarMenuItem key={item.label}>
           {item.subItems ? (
-             <Collapsible key={item.label} defaultOpen={isParentActive(item)}>
+             <Collapsible key={item.id} defaultOpen={isParentActive(item)}>
                 <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                         asChild={false}
