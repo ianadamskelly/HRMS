@@ -2,38 +2,40 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
+  
     // Helper functions to check user roles from custom claims
     function isAdmin() {
-      return request.auth.token.role == 'admin';
+      return request.auth.token.role == 'Admin';
     }
-
+    
     function isManager() {
-      return request.auth.token.role == 'manager';
+      return request.auth.token.role == 'Manager';
     }
-
+    
     function isEmployee() {
-      return request.auth.token.role != null; // Any authenticated user is an employee
+      return request.auth.token.role == 'Employee';
     }
-
-    // Only admins can read/write the list of roles
+    
+    // Employee collection:
+    // - Admins can read/write all employee records.
+    // - Managers can read their direct reports.
+    // - Employees can read/update their own record.
+    match /employees/{userId} {
+      allow read: if isAdmin() || request.auth.uid == userId || (isManager() && get(/databases/$(database)/documents/employees/$(userId)).data.managerId == request.auth.uid);
+      allow write: if isAdmin() || request.auth.uid == userId;
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Roles collection:
+    // - Admins can manage roles.
+    // - Authenticated users can read role definitions.
     match /roles/{roleId} {
-      allow read, write: if isAdmin();
-    }
-
-    // Rules for the 'employees' collection
-    match /employees/{employeeId} {
-      // Admins can read and write all employee data
-      // Employees can read their own data
-      allow read: if isAdmin() || request.auth.uid == employeeId;
+      allow read: if request.auth != null;
       allow write: if isAdmin();
-
-      // Managers could potentially read data for their direct reports
-      // This would require storing the manager's UID on the employee document.
-      // Example: allow read: if isManager() && get(/databases/$(database)/documents/employees/$(employeeId)).data.managerId == request.auth.uid;
     }
 
-    // All other collections are locked down by default
+    // Default deny all other collections
     match /{document=**} {
       allow read, write: if false;
     }
