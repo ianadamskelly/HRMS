@@ -26,6 +26,8 @@ import {
   Settings,
   ChevronRight,
   Clock,
+  Briefcase,
+  Star,
 } from "lucide-react";
 
 const navItems = [
@@ -83,6 +85,17 @@ const navItems = [
         { href: "/dashboard/performance/goal-setting", label: "Goal Setting" },
         { href: "/dashboard/performance/continuous-feedback", label: "Continuous Feedback" },
         { href: "/dashboard/performance/performance-appraisal", label: "Performance Appraisal" },
+    ]
+  },
+  { 
+    id: "talent-management",
+    label: "Talent Management", 
+    icon: Star,
+    subItems: [
+        { href: "/dashboard/talent-management/high-potential", label: "High-Potential" },
+        { href: "/dashboard/talent-management/succession-planning", label: "Succession Planning" },
+        { href: "/dashboard/talent-management/development-plans", label: "Development Plans" },
+        { href: "/dashboard/talent-management/talent-review", label: "Talent Review" },
     ]
   },
   { 
