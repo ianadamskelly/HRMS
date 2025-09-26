@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from "react";
@@ -139,7 +140,7 @@ export function DashboardNav() {
       {navItems.map((item, index) => (
         <SidebarMenuItem key={index}>
           {item.subItems ? (
-             <Collapsible defaultOpen={isParentActive(item)}>
+             <Collapsible key={item.label} defaultOpen={isParentActive(item)}>
                 <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                         asChild={false}
