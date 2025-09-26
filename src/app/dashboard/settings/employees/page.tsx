@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardHeader } from "@/components/dashboard-header";
 import {
   Card,
@@ -41,7 +41,7 @@ import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
-const employees = [
+const employeesData = [
   {
     id: "EMP001",
     name: "John Doe",
@@ -110,19 +110,57 @@ const steps = [
     { id: 5, title: "Compliance" },
 ];
 
-function AddEmployeeWizard() {
+type AddEmployeeWizardProps = {
+    initialData?: {
+        fullName?: string;
+        email?: string;
+        jobTitle?: string;
+        department?: string;
+        salary?: number;
+    };
+    onEmployeeCreated?: () => void;
+};
+
+export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmployeeWizardProps) {
     const [step, setStep] = useState(1);
     const [startDate, setStartDate] = useState<Date>();
     const [dob, setDob] = useState<Date>();
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    // Form state for pre-filling
+    const [fullName, setFullName] = useState(initialData?.fullName || '');
+    const [email, setEmail] = useState(initialData?.email || '');
+    const [jobTitle, setJobTitle] = useState(initialData?.jobTitle || '');
+    const [department, setDepartment] = useState(initialData?.department || '');
+    const [salary, setSalary] = useState(initialData?.salary?.toString() || '');
+
+    useEffect(() => {
+        if (initialData) {
+            setFullName(initialData.fullName || '');
+            setEmail(initialData.email || '');
+            setJobTitle(initialData.jobTitle || '');
+            setDepartment(initialData.department || '');
+            setSalary(initialData.salary?.toString() || '');
+        }
+    }, [initialData]);
 
     const nextStep = () => setStep(prev => Math.min(prev + 1, steps.length));
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
     const progress = (step / steps.length) * 100;
 
+    const handleCreateEmployee = () => {
+        // In a real app, you would submit all collected data to your backend here
+        console.log("Creating employee...");
+        if (onEmployeeCreated) {
+            onEmployeeCreated();
+        }
+        setIsDialogOpen(false); // Close dialog on creation
+    };
+
     return (
         <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
-                <DialogTitle className="font-headline">Add New Employee (Manual Entry)</DialogTitle>
+                <DialogTitle className="font-headline">Add New Employee</DialogTitle>
                 <DialogDescription>
                    Step {step} of {steps.length}: {steps[step - 1].title}
                 </DialogDescription>
@@ -134,7 +172,7 @@ function AddEmployeeWizard() {
                         <h3 className="font-semibold">Initiate Profile</h3>
                         <div className="space-y-2">
                             <Label htmlFor="employee-id">Employee ID</Label>
-                            <Input id="employee-id" placeholder="Enter internal unique identifier" />
+                            <Input id="employee-id" placeholder="Enter internal unique identifier or leave blank to auto-generate" />
                         </div>
                     </div>
                 )}
@@ -144,7 +182,7 @@ function AddEmployeeWizard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="full-name">Full Name</Label>
-                                <Input id="full-name" placeholder="e.g. John Doe" />
+                                <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Doe" />
                             </div>
                             <div className="space-y-2">
                                 <Label>Date of Birth</Label>
@@ -160,7 +198,7 @@ function AddEmployeeWizard() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="email">Contact Email</Label>
-                                <Input id="email" type="email" placeholder="e.g. john.doe@email.com" />
+                                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. john.doe@email.com" />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="phone">Contact Phone</Label>
@@ -183,11 +221,11 @@ function AddEmployeeWizard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                              <div className="space-y-2">
                                 <Label htmlFor="job-title">Job Title</Label>
-                                <Input id="job-title" placeholder="e.g. Software Engineer" />
+                                <Input id="job-title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. Software Engineer" />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="department">Department</Label>
-                                <Select><SelectTrigger id="department"><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select>
+                                <Select value={department} onValueChange={setDepartment}><SelectTrigger id="department"><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="location">Location</Label>
@@ -195,7 +233,7 @@ function AddEmployeeWizard() {
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="manager">Manager</Label>
-                                <Select><SelectTrigger id="manager"><SelectValue placeholder="Select manager" /></SelectTrigger><SelectContent>{employees.filter(e => e.status === 'Active').map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent></Select>
+                                <Select><SelectTrigger id="manager"><SelectValue placeholder="Select manager" /></SelectTrigger><SelectContent>{employeesData.filter(e => e.status === 'Active').map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent></Select>
                             </div>
                              <div className="space-y-2 md:col-span-2">
                                 <Label>Start Date (Original Hire Date)</Label>
@@ -218,7 +256,7 @@ function AddEmployeeWizard() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="salary">Base Salary / Pay Rate</Label>
-                                <Input id="salary" type="number" placeholder="e.g. 90000" />
+                                <Input id="salary" type="number" value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="e.g. 90000" />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="pay-grade">Pay Grade/Band</Label>
@@ -274,7 +312,7 @@ function AddEmployeeWizard() {
                         </Button>
                     ) : (
                          <DialogClose asChild>
-                            <Button>Create Employee Profile</Button>
+                            <Button onClick={handleCreateEmployee}>Create Employee Profile</Button>
                         </DialogClose>
                     )}
                  </div>
@@ -328,7 +366,7 @@ export default function EmployeesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {employees.map((employee) => (
+                {employeesData.map((employee) => (
                   <TableRow key={employee.id}>
                     <TableCell className="font-mono">{employee.id}</TableCell>
                     <TableCell className="font-medium">

@@ -1,3 +1,5 @@
+'use client';
+
 import { DashboardHeader } from "@/components/dashboard-header";
 import {
     Card,
@@ -18,10 +20,13 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { AddEmployeeWizard } from "@/app/dashboard/settings/employees/page";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
 
-const candidates = [
-    { name: "Jane Smith", role: "Product Manager", status: "Offer Generated", offerStatus: "Sent" },
-    { name: "John Doe", role: "Software Engineer", status: "Background Check", offerStatus: "Accepted" },
+const candidatesData = [
+    { id: 'candidate-jane', name: "Jane Smith", role: "Product Manager", department: "Product", status: "Offer Generated", offerStatus: "Sent", salary: 140000, email: "jane.smith.candidate@example.com" },
+    { id: 'candidate-john', name: "John Doe", role: "Software Engineer", department: "Engineering", status: "Background Check", offerStatus: "Accepted", salary: 150000, email: "john.doe.candidate@example.com" },
 ];
 
 const backgroundChecks = [
@@ -31,6 +36,13 @@ const backgroundChecks = [
 ]
 
 export default function SelectionPage() {
+    const [candidates, setCandidates] = useState(candidatesData);
+
+    const handleTransfer = (candidateId: string) => {
+        // In a real app, this would also update the backend to mark the candidate as "Transferred"
+        setCandidates(prev => prev.map(c => c.id === candidateId ? { ...c, status: 'Transferred' } : c));
+    };
+
     return (
         <div className="flex flex-col h-full">
             <DashboardHeader title="Recruitment" />
@@ -53,8 +65,8 @@ export default function SelectionPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {candidates.map((candidate, index) => (
-                                    <TableRow key={index}>
+                                {candidates.map((candidate) => (
+                                    <TableRow key={candidate.id}>
                                         <TableCell className="font-medium">{candidate.name}</TableCell>
                                         <TableCell>{candidate.role}</TableCell>
                                         <TableCell>
@@ -120,15 +132,35 @@ export default function SelectionPage() {
                         <CardDescription>Once an offer is accepted and checks are clear, transfer the candidate to the core HR system.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="flex items-center justify-between p-4 bg-secondary rounded-lg">
-                            <div>
-                                <p className="font-semibold">Jane Smith (Product Manager)</p>
-                                <p className="text-sm text-muted-foreground">Offer accepted. Ready for onboarding.</p>
+                        {candidates.filter(c => c.offerStatus === 'Accepted').map(candidate => (
+                            <div key={candidate.id} className="flex items-center justify-between p-4 bg-secondary rounded-lg">
+                                <div>
+                                    <p className="font-semibold">{candidate.name} ({candidate.role})</p>
+                                    <p className="text-sm text-muted-foreground">Offer accepted. Ready for onboarding.</p>
+                                </div>
+                                {candidate.status !== 'Transferred' ? (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button>
+                                                Transfer to Employee Profile
+                                            </Button>
+                                        </DialogTrigger>
+                                        <AddEmployeeWizard 
+                                            initialData={{
+                                                fullName: candidate.name,
+                                                email: candidate.email,
+                                                jobTitle: candidate.role,
+                                                department: candidate.department,
+                                                salary: candidate.salary,
+                                            }}
+                                            onEmployeeCreated={() => handleTransfer(candidate.id)}
+                                        />
+                                    </Dialog>
+                                ) : (
+                                    <Badge>Transferred</Badge>
+                                )}
                             </div>
-                            <Button>
-                                Transfer to Employee Profile
-                            </Button>
-                        </div>
+                        ))}
                     </CardContent>
                 </Card>
 
