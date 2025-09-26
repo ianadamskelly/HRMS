@@ -78,7 +78,15 @@ const navItems = [
         { href: "/dashboard/compensation/compensation-analysis", label: "Compensation Analysis" },
     ]
   },
-  { href: "/dashboard/benefits", label: "Benefits", icon: Gift },
+  { 
+    label: "Benefits", 
+    icon: Gift,
+    subItems: [
+        { href: "/dashboard/benefits/salary-structure", label: "Salary Structure" },
+        { href: "/dashboard/benefits/incentives", label: "Incentives" },
+        { href: "/dashboard/benefits/benefits", label: "Benefits" },
+    ]
+  },
   { 
     label: "Exit Management", 
     icon: LogOut,
