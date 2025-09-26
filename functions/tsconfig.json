@@ -1,12 +1,15 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "moduleResolution": "node",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "outDir": "lib",
     "sourceMap": true,
+    "skipLibCheck": true,
     "strict": true,
-    "target": "es2017"
+    "target": "es2022",
+    "resolveJsonModule": true
   },
   "compileOnSave": true,
   "include": [
