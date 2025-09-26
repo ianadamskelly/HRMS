@@ -207,7 +207,6 @@ export default function ExitInterviewPage() {
                                 <PieChart>
                                     <Tooltip
                                     cursor={false}
-                                    content={<div className="text-sm bg-background p-2 rounded-lg border shadow-sm">Custom Tooltip</div>}
                                     />
                                     <Pie
                                         data={reasonsForLeavingData}
@@ -223,7 +222,7 @@ export default function ExitInterviewPage() {
                                         <Cell key={`cell-${index}`} fill={entry.fill} />
                                     ))}
                                     </Pie>
-                                    <Legend content={<div className="text-sm">Custom Legend</div>}/>
+                                    <Legend />
                                 </PieChart>
                             </ChartContainer>
                         </div>
