@@ -351,6 +351,7 @@ export default function EmployeesPage() {
                     type="search"
                     placeholder="Search employees..."
                     className="pl-8 w-full sm:w-[300px]"
+                    suppressHydrationWarning
                 />
             </div>
             <Table>
