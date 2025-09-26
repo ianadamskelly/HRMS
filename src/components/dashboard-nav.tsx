@@ -100,6 +100,7 @@ const navItems = [
     label: "Settings", 
     icon: Settings,
     subItems: [
+        { href: "/dashboard/settings/organization", label: "Organization" },
         { href: "/dashboard/settings/roles", label: "Roles" },
         { href: "/dashboard/settings/employees", label: "Employees" },
         { href: "/dashboard/settings/integrations", label: "Integrations" },
