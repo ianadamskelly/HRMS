@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Calendar as CalendarIcon, Upload, ArrowRight, PieChart as PieChartIcon, BarChart, Users, Link as LinkIcon, Download } from "lucide-react";
+import { PlusCircle, Calendar as CalendarIcon, Upload, ArrowRight, PieChart as PieChartIcon, BarChart as BarChartIcon, Users, Link as LinkIcon, Download } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -29,6 +29,7 @@ import {
   ResponsiveContainer,
   Tooltip,
   Legend,
+  BarChart,
   Bar,
   CartesianGrid,
   XAxis,
@@ -130,7 +131,7 @@ export default function TalentReviewPage() {
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="font-headline flex items-center gap-2"><BarChart /> Visual Reporting Dashboards</CardTitle>
+                        <CardTitle className="font-headline flex items-center gap-2"><BarChartIcon /> Visual Reporting Dashboards</CardTitle>
                         <CardDescription>Executive summaries and interactive reports on key talent metrics.</CardDescription>
                     </CardHeader>
                     <CardContent className="grid md:grid-cols-2 gap-8">
