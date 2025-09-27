@@ -8,14 +8,16 @@ import {
     addDoc,
     updateDoc,
     deleteDoc,
+    query,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./auth";
 
-const ORG_PROFILE_DOC_ID = "main_profile";
 const ORG_COLLECTION = "organization";
+const ORG_PROFILE_DOC_ID = "main_profile";
 const DEPARTMENTS_COLLECTION = "departments";
 const LOCATIONS_COLLECTION = "locations";
+const ROLES_COLLECTION = "roles";
 
 // Organization Profile
 export const getOrganizationProfile = async () => {
@@ -25,7 +27,9 @@ export const getOrganizationProfile = async () => {
         return docSnap.data();
     } else {
         // Return a default object if it doesn't exist
-        return { name: 'HRM Simplified', address: '123 Main Street, Anytown, USA', contactInfo: 'contact@hrmsimplified.com', logoUrl: "https://picsum.photos/seed/logo/100/100" };
+        const defaultProfile = { name: 'HRM Simplified', address: '123 Main Street, Anytown, USA', contactInfo: 'contact@hrmsimplified.com', logoUrl: "https://picsum.photos/seed/logo/100/100" };
+        await setDoc(docRef, defaultProfile);
+        return defaultProfile;
     }
 };
 
@@ -43,7 +47,8 @@ export const uploadCompanyLogo = async (file: File) => {
 
 // Departments
 export const getDepartments = async () => {
-    const querySnapshot = await getDocs(collection(db, DEPARTMENTS_COLLECTION));
+    const q = query(collection(db, DEPARTMENTS_COLLECTION));
+    const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
@@ -63,7 +68,8 @@ export const deleteDepartment = async (id: string) => {
 
 // Locations
 export const getLocations = async () => {
-    const querySnapshot = await getDocs(collection(db, LOCATIONS_COLLECTION));
+    const q = query(collection(db, LOCATIONS_COLLECTION));
+    const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
@@ -78,5 +84,26 @@ export const updateLocation = async (id: string, location: { name: string }) => 
 
 export const deleteLocation = async (id: string) => {
     const docRef = doc(db, LOCATIONS_COLLECTION, id);
+    await deleteDoc(docRef);
+};
+
+// Roles
+export const getRoles = async () => {
+    const q = query(collection(db, ROLES_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const addRole = async (role: { title: string; description: string; permissions: string[] }) => {
+    await addDoc(collection(db, ROLES_COLLECTION), role);
+};
+
+export const updateRole = async (id: string, role: { title: string; description: string; permissions: string[] }) => {
+    const docRef = doc(db, ROLES_COLLECTION, id);
+    await updateDoc(docRef, role);
+};
+
+export const deleteRole = async (id: string) => {
+    const docRef = doc(db, ROLES_COLLECTION, id);
     await deleteDoc(docRef);
 };

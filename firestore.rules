@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -16,22 +17,33 @@ service cloud.firestore {
       return request.auth.token.role == 'Employee';
     }
 
-    // Organization collections:
-    // - Admins and Managers can manage these settings.
-    // - All authenticated users can read them.
+    // Authenticated users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Organization, Departments, Locations can be managed by Admins and Managers
     match /organization/{docId} {
       allow read: if request.auth != null;
       allow write: if isAdmin() || isManager();
     }
 
     match /departments/{docId} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin() || isManager();
+      allow read: if request.auth != null;
+      allow write: if isAdmin() || isManager();
     }
 
     match /locations/{docId} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin() || isManager();
+      allow read: if request.auth != null;
+      allow write: if isAdmin() || isManager();
+    }
+    
+    // Roles collection:
+    // - Admins can manage roles.
+    // - Authenticated users can read role definitions.
+    match /roles/{roleId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
     }
     
     // Employee collection:
@@ -44,17 +56,9 @@ service cloud.firestore {
       allow create: if isAdmin();
       allow delete: if isAdmin();
     }
-    
-    // Roles collection:
-    // - Admins can manage roles.
-    // - Authenticated users can read role definitions.
-    match /roles/{roleId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
-    }
 
-    // Default deny all other collections that are not explicitly matched
-    match /{path=**} {
+    // Default deny all other collections for safety
+    match /{document=**} {
       allow read, write: if false;
     }
   }
