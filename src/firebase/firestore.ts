@@ -18,6 +18,7 @@ const ORG_PROFILE_DOC_ID = "main_profile";
 const DEPARTMENTS_COLLECTION = "departments";
 const LOCATIONS_COLLECTION = "locations";
 const ROLES_COLLECTION = "roles";
+const PAY_GRADES_COLLECTION = "payGrades";
 
 // Organization Profile
 export const getOrganizationProfile = async () => {
@@ -105,5 +106,26 @@ export const updateRole = async (id: string, role: { title: string; description:
 
 export const deleteRole = async (id: string) => {
     const docRef = doc(db, ROLES_COLLECTION, id);
+    await deleteDoc(docRef);
+};
+
+// Pay Grades
+export const getPayGrades = async () => {
+    const q = query(collection(db, PAY_GRADES_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const addPayGrade = async (payGrade: { name: string; minSalary: number; midSalary: number; maxSalary: number; }) => {
+    await addDoc(collection(db, PAY_GRADES_COLLECTION), payGrade);
+};
+
+export const updatePayGrade = async (id: string, payGrade: { name: string; minSalary: number; midSalary: number; maxSalary: number; }) => {
+    const docRef = doc(db, PAY_GRADES_COLLECTION, id);
+    await updateDoc(docRef, payGrade);
+};
+
+export const deletePayGrade = async (id: string) => {
+    const docRef = doc(db, PAY_GRADES_COLLECTION, id);
     await deleteDoc(docRef);
 };

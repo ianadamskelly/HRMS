@@ -39,6 +39,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getDepartments, getPayGrades } from '@/firebase/firestore';
 
 
 const employeesData = [
@@ -84,9 +85,8 @@ const employeesData = [
   },
 ];
 
-const departments = ["Engineering", "Product", "Design", "Marketing", "Sales", "Human Resources"];
+
 const locations = ["New York, NY", "San Francisco, CA", "Remote"];
-const jobGrades = ["P1", "P2", "P3", "M1", "M2"];
 const roles = ["Admin", "Manager", "Employee"];
 
 
@@ -128,6 +128,10 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
     const [startDate, setStartDate] = useState<Date>();
     const [dob, setDob] = useState<Date>();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    
+    const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+    const [payGrades, setPayGrades] = useState<{ id: string; name: string }[]>([]);
+
 
     // Form state for pre-filling
     const [fullName, setFullName] = useState(initialData?.fullName || '');
@@ -146,6 +150,15 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
             setSalary(initialData.salary?.toString() || '');
             setRole(initialData.role || 'Employee');
         }
+
+        const fetchDropdownData = async () => {
+            const depts = await getDepartments();
+            const grades = await getPayGrades();
+            setDepartments(depts as { id: string; name: string }[]);
+            setPayGrades(grades as { id: string; name: string }[]);
+        };
+        fetchDropdownData();
+
     }, [initialData]);
 
     const nextStep = () => setStep(prev => Math.min(prev + 1, steps.length));
@@ -236,7 +249,7 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="department">Department</Label>
-                                <Select value={department} onValueChange={setDepartment}><SelectTrigger id="department"><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select>
+                                <Select value={department} onValueChange={setDepartment}><SelectTrigger id="department"><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="manager">Manager</Label>
@@ -267,7 +280,7 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="pay-grade">Pay Grade/Band</Label>
-                                <Select><SelectTrigger id="pay-grade"><SelectValue placeholder="Select grade" /></SelectTrigger><SelectContent>{jobGrades.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent></Select>
+                                <Select><SelectTrigger id="pay-grade"><SelectValue placeholder="Select grade" /></SelectTrigger><SelectContent>{payGrades.map(g => <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>)}</SelectContent></Select>
                             </div>
                         </div>
                     </div>

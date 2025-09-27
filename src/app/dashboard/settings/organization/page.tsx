@@ -18,6 +18,8 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import {
@@ -42,7 +44,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-import { Upload, Building, MapPin, PlusCircle, Trash2, Edit, Loader2 } from "lucide-react";
+import { Upload, Building, MapPin, PlusCircle, Trash2, Edit, Loader2, DollarSign } from "lucide-react";
 import Image from "next/image";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -57,6 +59,10 @@ import {
     addLocation,
     updateLocation,
     deleteLocation,
+    getPayGrades,
+    addPayGrade,
+    updatePayGrade,
+    deletePayGrade,
 } from "@/firebase/firestore";
 
 type OrganizationProfile = {
@@ -74,6 +80,14 @@ type Department = {
 type Location = {
     id: string;
     name: string;
+};
+
+type PayGrade = {
+    id: string;
+    name: string;
+    minSalary: number;
+    midSalary: number;
+    maxSalary: number;
 };
 
 
@@ -185,11 +199,88 @@ function AddEditLocationDialog({ location, onSave }: { location?: Location | nul
     );
 }
 
+function AddEditPayGradeDialog({ payGrade, onSave }: { payGrade?: PayGrade | null, onSave: () => void }) {
+    const [name, setName] = useState(payGrade ? payGrade.name : "");
+    const [minSalary, setMinSalary] = useState(payGrade ? payGrade.minSalary : '');
+    const [midSalary, setMidSalary] = useState(payGrade ? payGrade.midSalary : '');
+    const [maxSalary, setMaxSalary] = useState(payGrade ? payGrade.maxSalary : '');
+    const [isSaving, setIsSaving] = useState(false);
+    const { toast } = useToast();
+
+    const handleSave = async () => {
+        if (!name || !minSalary || !midSalary || !maxSalary) {
+            toast({ variant: "destructive", title: "All fields are required." });
+            return;
+        }
+        setIsSaving(true);
+        const payGradeData = {
+            name,
+            minSalary: Number(minSalary),
+            midSalary: Number(midSalary),
+            maxSalary: Number(maxSalary),
+        };
+        try {
+            if (payGrade) {
+                await updatePayGrade(payGrade.id, payGradeData);
+                toast({ title: "Pay Grade updated successfully!" });
+            } else {
+                await addPayGrade(payGradeData);
+                toast({ title: "Pay Grade added successfully!" });
+            }
+            onSave();
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error saving pay grade." });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{payGrade ? 'Edit' : 'Add'} Pay Grade</DialogTitle>
+                <DialogDescription>
+                    {payGrade ? 'Update the details for this pay grade.' : 'Add a new pay grade and salary band.'}
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="grade-name">Grade Name</Label>
+                    <Input id="grade-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. P1, M2" />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="min-salary">Min Salary</Label>
+                        <Input id="min-salary" type="number" value={minSalary} onChange={(e) => setMinSalary(e.target.value)} placeholder="e.g. 60000" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="mid-salary">Midpoint Salary</Label>
+                        <Input id="mid-salary" type="number" value={midSalary} onChange={(e) => setMidSalary(e.target.value)} placeholder="e.g. 75000" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="max-salary">Max Salary</Label>
+                        <Input id="max-salary" type="number" value={maxSalary} onChange={(e) => setMaxSalary(e.target.value)} placeholder="e.g. 90000" />
+                    </div>
+                </div>
+            </div>
+            <DialogFooter>
+                 <DialogClose asChild>
+                    <Button type="button" variant="secondary">Cancel</Button>
+                </DialogClose>
+                <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    );
+}
 
 export default function OrganizationPage() {
     const [profile, setProfile] = useState<OrganizationProfile>({ name: '', address: '', contactInfo: '', logoUrl: "https://picsum.photos/seed/logo/100/100" });
     const [departments, setDepartments] = useState<Department[]>([]);
     const [locations, setLocations] = useState<Location[]>([]);
+    const [payGrades, setPayGrades] = useState<PayGrade[]>([]);
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -205,6 +296,8 @@ export default function OrganizationPage() {
             setDepartments(depts as Department[]);
             const locs = await getLocations();
             setLocations(locs as Location[]);
+            const grades = await getPayGrades();
+            setPayGrades(grades as PayGrade[]);
         } catch (error) {
             toast({ variant: "destructive", title: "Error fetching data." });
         }
@@ -276,6 +369,16 @@ export default function OrganizationPage() {
             fetchAllData();
         } catch (error) {
             toast({ variant: "destructive", title: "Error deleting location." });
+        }
+    };
+
+    const handleDeletePayGrade = async (id: string) => {
+        try {
+            await deletePayGrade(id);
+            toast({ title: "Pay Grade deleted." });
+            fetchAllData();
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error deleting pay grade." });
         }
     };
 
@@ -421,36 +524,55 @@ export default function OrganizationPage() {
         </div>
         
         <Card>
-          <CardHeader>
-            <CardTitle className="font-headline flex items-center gap-2">Organizational Chart</CardTitle>
-            <CardDescription>
-              Visualize and manage the company's reporting structure.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="p-6 border rounded-lg text-center bg-muted">
-                <p className="font-semibold">Interactive Organizational Chart</p>
-                <p className="text-sm text-muted-foreground">This visualization is driven by the 'Reports To' field on employee profiles.</p>
-                <div className="mt-4 text-sm">
-                    <p className="font-bold">CEO</p>
-                    <div className="flex justify-center"><div className="w-px h-6 bg-border"></div></div>
-                    <div className="flex justify-around">
-                        <div className="w-full relative before:absolute before:left-1/2 before:-top-6 before:h-6 before:w-px before:bg-border">
-                            <p>VP of Engineering</p>
-                        </div>
-                        <div className="w-full relative before:absolute before:left-1/2 before:-top-6 before:h-6 before:w-px before:bg-border after:absolute after:left-0 after:-top-px after:h-px after:w-full after:bg-border">
-                             <p>VP of Product</p>
-                        </div>
-                         <div className="w-full relative before:absolute before:left-1/2 before:-top-6 before:h-6 before:w-px before:bg-border after:absolute after:left-0 after:-top-px after:h-px after:w-full after:bg-border">
-                            <p>VP of Sales</p>
-                        </div>
-                    </div>
+            <CardHeader className="flex-row items-center justify-between">
+                <div>
+                    <CardTitle className="font-headline flex items-center gap-2"><DollarSign /> Pay Grades</CardTitle>
+                    <CardDescription>Define salary bands for different job levels.</CardDescription>
                 </div>
-            </div>
-          </CardContent>
-           <CardFooter>
-            <Button variant="outline">Manage Reporting Lines</Button>
-          </CardFooter>
+                 <Dialog onOpenChange={(isOpen) => !isOpen && fetchAllData()}>
+                    <DialogTrigger asChild><Button size="sm"><PlusCircle className="mr-2 h-4 w-4"/>Add Grade</Button></DialogTrigger>
+                    <AddEditPayGradeDialog onSave={fetchAllData} />
+                </Dialog>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Grade Name</TableHead>
+                            <TableHead>Min Salary</TableHead>
+                            <TableHead>Midpoint Salary</TableHead>
+                            <TableHead>Max Salary</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {payGrades.map((grade) => (
+                            <TableRow key={grade.id}>
+                                <TableCell className="font-medium">{grade.name}</TableCell>
+                                <TableCell className="font-mono">${grade.minSalary.toLocaleString()}</TableCell>
+                                <TableCell className="font-mono">${grade.midSalary.toLocaleString()}</TableCell>
+                                <TableCell className="font-mono">${grade.maxSalary.toLocaleString()}</TableCell>
+                                <TableCell className="text-right">
+                                    <Dialog onOpenChange={(isOpen) => !isOpen && fetchAllData()}>
+                                        <DialogTrigger asChild><Button variant="ghost" size="icon"><Edit className="h-4 w-4"/></Button></DialogTrigger>
+                                        <AddEditPayGradeDialog payGrade={grade} onSave={fetchAllData} />
+                                    </Dialog>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive"/></Button></AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently delete the pay grade.</AlertDialogDescription></AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeletePayGrade(grade.id)}>Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
         </Card>
 
       </main>
