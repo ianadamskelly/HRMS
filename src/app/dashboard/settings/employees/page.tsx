@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DashboardHeader } from "@/components/dashboard-header";
 import {
   Card,
@@ -87,6 +87,7 @@ const employeesData = [
 const departments = ["Engineering", "Product", "Design", "Marketing", "Sales", "Human Resources"];
 const locations = ["New York, NY", "San Francisco, CA", "Remote"];
 const jobGrades = ["P1", "P2", "P3", "M1", "M2"];
+const roles = ["Admin", "Manager", "Employee"];
 
 
 const getBadgeVariant = (status: string) => {
@@ -117,6 +118,7 @@ type AddEmployeeWizardProps = {
         jobTitle?: string;
         department?: string;
         salary?: number;
+        role?: string;
     };
     onEmployeeCreated?: () => void;
 };
@@ -133,6 +135,7 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
     const [jobTitle, setJobTitle] = useState(initialData?.jobTitle || '');
     const [department, setDepartment] = useState(initialData?.department || '');
     const [salary, setSalary] = useState(initialData?.salary?.toString() || '');
+    const [role, setRole] = useState(initialData?.role || 'Employee');
 
     useEffect(() => {
         if (initialData) {
@@ -141,6 +144,7 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
             setJobTitle(initialData.jobTitle || '');
             setDepartment(initialData.department || '');
             setSalary(initialData.salary?.toString() || '');
+            setRole(initialData.role || 'Employee');
         }
     }, [initialData]);
 
@@ -227,9 +231,12 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                                 <Label htmlFor="department">Department</Label>
                                 <Select value={department} onValueChange={setDepartment}><SelectTrigger id="department"><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select>
                             </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="location">Location</Label>
-                                <Select><SelectTrigger id="location"><SelectValue placeholder="Select location" /></SelectTrigger><SelectContent>{locations.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select>
+                              <div className="space-y-2">
+                                <Label htmlFor="role">Role</Label>
+                                <Select value={role} onValueChange={setRole}>
+                                    <SelectTrigger id="role"><SelectValue placeholder="Select role" /></SelectTrigger>
+                                    <SelectContent>{roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                                </Select>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="manager">Manager</Label>
