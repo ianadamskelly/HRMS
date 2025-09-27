@@ -14,23 +14,9 @@ import { getApp, getApps, initializeApp } from 'firebase/app';
 import { firebaseConfig } from './config';
 
 // Initialize Firebase app if it hasn't been already
-let app;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
-}
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
-
-// Connect to the Auth emulator if running in development
-if (process.env.NODE_ENV === 'development') {
-  // To prevent re-connecting on hot reloads
-  if (!(auth as any).emulatorConfig) {
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-  }
-}
-
 
 const googleProvider = new GoogleAuthProvider();
 
