@@ -8,11 +8,11 @@
 import { FirebaseOptions } from "firebase/app";
 
 export const firebaseConfig: FirebaseOptions = {
-  "apiKey": "API_KEY",
+  "apiKey": "AIzaSyD_ZEhD-4avFJc1rA4BpXhEuDvb2rAW1NU",
   "authDomain": "hrms-af28f.firebaseapp.com",
   "projectId": "hrms-af28f",
   "storageBucket": "hrms-af28f.appspot.com",
-  "messagingSenderId": "975313936997",
-  "appId": "1:975313936997:web:8032e36b8e3a47926e82a9",
-  "measurementId": "G-M9V6Y1G1C1"
+  "messagingSenderId": "924905397621",
+  "appId": "1:924905397621:web:8a4b7496d8e47b26e8873c",
+  "measurementId": "G-FVP0C3XG1H"
 };
