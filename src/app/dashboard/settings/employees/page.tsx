@@ -178,16 +178,27 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                             <Label htmlFor="employee-id">Employee ID</Label>
                             <Input id="employee-id" placeholder="Enter internal unique identifier or leave blank to auto-generate" />
                         </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="full-name">Full Name</Label>
+                            <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Doe" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Contact Email</Label>
+                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. john.doe@email.com" />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="role">Role</Label>
+                            <Select value={role} onValueChange={setRole}>
+                                <SelectTrigger id="role"><SelectValue placeholder="Select role" /></SelectTrigger>
+                                <SelectContent>{roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 )}
                 {step === 2 && (
                     <div className="space-y-4">
                         <h3 className="font-semibold">Personal Data</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="full-name">Full Name</Label>
-                                <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Doe" />
-                            </div>
                             <div className="space-y-2">
                                 <Label>Date of Birth</Label>
                                 <Popover>
@@ -199,10 +210,6 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dob} onSelect={setDob} captionLayout="dropdown-buttons" fromYear={1960} toYear={2010} /></PopoverContent>
                                 </Popover>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Contact Email</Label>
-                                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. john.doe@email.com" />
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="phone">Contact Phone</Label>
@@ -230,13 +237,6 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                              <div className="space-y-2">
                                 <Label htmlFor="department">Department</Label>
                                 <Select value={department} onValueChange={setDepartment}><SelectTrigger id="department"><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select>
-                            </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="role">Role</Label>
-                                <Select value={role} onValueChange={setRole}>
-                                    <SelectTrigger id="role"><SelectValue placeholder="Select role" /></SelectTrigger>
-                                    <SelectContent>{roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                                </Select>
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="manager">Manager</Label>
