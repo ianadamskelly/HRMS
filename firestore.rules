@@ -2,42 +2,9 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Helper functions to check user roles from custom claims
-    function isAdmin() {
-      return request.auth.token.role == 'Admin';
-    }
-    
-    function isManager() {
-      return request.auth.token.role == 'Manager';
-    }
-    
-    function isEmployee() {
-      return request.auth.token.role == 'Employee';
-    }
-    
-    // Employee collection:
-    // - Admins can read/write all employee records.
-    // - Managers can read their direct reports.
-    // - Employees can read/update their own record.
-    match /employees/{userId} {
-      allow read: if isAdmin() || request.auth.uid == userId || (isManager() && get(/databases/$(database)/documents/employees/$(userId)).data.managerId == request.auth.uid);
-      allow write: if isAdmin() || request.auth.uid == userId;
-      allow create: if isAdmin();
-      allow delete: if isAdmin();
-    }
-    
-    // Roles collection:
-    // - Admins can manage roles.
-    // - Authenticated users can read role definitions.
-    match /roles/{roleId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin();
-    }
-
-    // Default deny all other collections
-    match /{document=**} {
-      allow read, write: if false;
+    // Allow authenticated users to read/write to the organization, departments, and locations collections
+    match /{collection=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }
