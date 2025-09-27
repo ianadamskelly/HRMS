@@ -1,4 +1,7 @@
-import React from 'react';
+'use client';
+import React, { useEffect } from 'react';
+import { useAuth } from '@/context/auth-context';
+import { useRouter } from 'next/navigation';
 import {
     Sidebar,
     SidebarContent,
@@ -6,7 +9,7 @@ import {
     SidebarInset,
     SidebarProvider,
 } from "@/components/ui/sidebar";
-import { Briefcase } from "lucide-react";
+import { Briefcase, Loader2 } from "lucide-react";
 import { DashboardNav } from "@/components/dashboard-nav";
 
 export default function DashboardLayout({
@@ -14,6 +17,23 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode;
 }) {
+    const { user, loading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!loading && !user) {
+            router.push('/login');
+        }
+    }, [user, loading, router]);
+
+    if (loading || !user) {
+        return (
+            <div className="flex h-screen w-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
     return (
         <SidebarProvider>
             <Sidebar>
