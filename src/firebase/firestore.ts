@@ -1,6 +1,5 @@
 
 import { 
-    getFirestore, 
     collection, 
     doc, 
     getDoc, 
@@ -10,11 +9,8 @@ import {
     updateDoc,
     deleteDoc,
 } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { app } from "./auth";
-
-const db = getFirestore(app);
-const storage = getStorage(app);
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "./auth";
 
 const ORG_PROFILE_DOC_ID = "main_profile";
 const ORG_COLLECTION = "organization";
@@ -84,4 +80,3 @@ export const deleteLocation = async (id: string) => {
     const docRef = doc(db, LOCATIONS_COLLECTION, id);
     await deleteDoc(docRef);
 };
-

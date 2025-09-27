@@ -1,3 +1,5 @@
+'use client';
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { 
     getAuth, 
@@ -7,6 +9,8 @@ import {
     GoogleAuthProvider,
     signOut
 } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,9 +25,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
 
 // Sign in with email and password
-export const signInWithEmail = async (email: string, password: string) => {
+const signInWithEmail = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
@@ -34,7 +41,7 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 // Sign up with email and password
-export const signUpWithEmail = async (email: string, password: string) => {
+const signUpWithEmail = async (email: string, password: string) => {
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     return userCredential.user;
@@ -45,7 +52,7 @@ export const signUpWithEmail = async (email: string, password: string) => {
 };
 
 // Sign in with Google
-export const signInWithGoogle = async () => {
+const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   try {
     const result = await signInWithPopup(auth, provider);
@@ -57,7 +64,7 @@ export const signInWithGoogle = async () => {
 };
 
 // Sign out
-export const signOutUser = async () => {
+const signOutUser = async () => {
   try {
     await signOut(auth);
   } catch (error) {
@@ -66,4 +73,13 @@ export const signOutUser = async () => {
   }
 };
 
-export { auth, app };
+export { 
+    auth, 
+    db,
+    storage,
+    app, 
+    signInWithEmail, 
+    signUpWithEmail, 
+    signInWithGoogle, 
+    signOutUser 
+};
