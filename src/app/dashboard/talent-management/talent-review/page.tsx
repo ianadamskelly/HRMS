@@ -29,6 +29,10 @@ import {
   ResponsiveContainer,
   Tooltip,
   Legend,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
 } from 'recharts';
 import { ChartContainer } from "@/components/ui/chart";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -208,4 +212,3 @@ export default function TalentReviewPage() {
         </div>
     );
 }
-
