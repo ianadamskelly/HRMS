@@ -1,43 +1,28 @@
-'use client';
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    signInWithPopup, 
+    GoogleAuthProvider,
+    signOut
+} from "firebase/auth";
 
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-} from 'firebase/auth';
-import { getApp, getApps, initializeApp, type FirebaseOptions } from 'firebase/app';
-
-// Manually define the configuration here to ensure it's correct.
-export const firebaseConfig: FirebaseOptions = {
-  "apiKey": "AIzaSyD_ZEhD-4avFJc1rA4BpXhEuDvb2rAW1NU",
-  "authDomain": "hrms-af28f.firebaseapp.com",
-  "projectId": "hrms-af28f",
-  "storageBucket": "hrms-af28f.appspot.com",
-  "messagingSenderId": "924905397621",
-  "appId": "1:924905397621:web:8a4b7496d8e47b26e8873c",
-  "measurementId": "G-FVP0C3XG1H"
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase app if it hasn't been already
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-
+// Initialize Firebase
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 
-const googleProvider = new GoogleAuthProvider();
-
-export const signUpWithEmail = async (email: string, password: string) => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  } catch (error) {
-    console.error('Error signing up:', error);
-    throw error;
-  }
-};
-
+// Sign in with email and password
 export const signInWithEmail = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -48,9 +33,22 @@ export const signInWithEmail = async (email: string, password: string) => {
   }
 };
 
-export const signInWithGoogle = async () => {
+// Sign up with email and password
+export const signUpWithEmail = async (email: string, password: string) => {
   try {
-    const result = await signInWithPopup(auth, googleProvider);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    return userCredential.user;
+  } catch (error) {
+    console.error('Error signing up:', error);
+    throw error;
+  }
+};
+
+// Sign in with Google
+export const signInWithGoogle = async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
     return result.user;
   } catch (error) {
     console.error('Error signing in with Google:', error);
@@ -58,6 +56,7 @@ export const signInWithGoogle = async () => {
   }
 };
 
+// Sign out
 export const signOutUser = async () => {
   try {
     await signOut(auth);
@@ -67,4 +66,4 @@ export const signOutUser = async () => {
   }
 };
 
-export { auth };
+export { auth, app };
