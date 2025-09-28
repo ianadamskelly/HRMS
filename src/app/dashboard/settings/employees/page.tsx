@@ -204,19 +204,19 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                         <h3 className="font-semibold">Initiate Profile</h3>
                         <div className="space-y-2">
                             <Label htmlFor="employee-id">Employee ID</Label>
-                            <Input id="employee-id" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Enter internal unique identifier or leave blank to auto-generate" />
+                            <Input id="employee-id" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Leave blank to auto-generate" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="full-name">Full Name</Label>
-                            <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Doe" />
+                            <Label htmlFor="full-name">Full Name <span className="text-destructive">*</span></Label>
+                            <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Doe" required />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="email">Contact Email</Label>
-                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. john.doe@email.com" />
+                            <Label htmlFor="email">Contact Email <span className="text-destructive">*</span></Label>
+                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. john.doe@email.com" required />
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="role">Role</Label>
-                            <Select value={role} onValueChange={setRole}>
+                            <Label htmlFor="role">Role <span className="text-destructive">*</span></Label>
+                            <Select value={role} onValueChange={setRole} required>
                                 <SelectTrigger id="role"><SelectValue placeholder="Select role" /></SelectTrigger>
                                 <SelectContent>{roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
                             </Select>
@@ -225,7 +225,10 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                 )}
                 {step === 2 && (
                     <div className="space-y-4">
-                        <h3 className="font-semibold">Personal Data</h3>
+                        <div className="space-y-1">
+                            <h3 className="font-semibold">Personal Data</h3>
+                            <p className="text-sm text-muted-foreground">This information is optional but helps complete the employee's profile.</p>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Date of Birth</Label>
@@ -268,7 +271,7 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="manager">Manager</Label>
-                                <Select value={manager} onValueChange={setManager}><SelectTrigger id="manager"><SelectValue placeholder="Select manager" /></SelectTrigger><SelectContent>{employees.filter(e => e.status === 'Active').map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent></Select>
+                                <Select value={manager} onValueChange={setManager}><SelectTrigger id="manager"><SelectValue placeholder="Select manager" /></SelectTrigger><SelectContent>{employees.filter(e => e.status === 'Active').map(e => <SelectItem key={e.id} value={e.fullName}>{e.fullName}</SelectItem>)}</SelectContent></Select>
                             </div>
                              <div className="space-y-2 md:col-span-2">
                                 <Label>Start Date (Original Hire Date)</Label>
@@ -409,7 +412,7 @@ export default function EmployeesPage() {
                   <TableHead>Employee ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
+                  <TableHead>Job Title</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
