@@ -20,9 +20,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogDescription,
   DialogFooter,
+  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -50,9 +50,14 @@ function ViewJDDialog({ jd }: { jd: JobDescription }) {
         <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle className="font-headline">{jd.title}</DialogTitle>
-                <DialogDescription>
-                    {jd.family} | Version: {jd.version} | Status: <Badge variant={getBadgeVariant(jd.status)}>{jd.status}</Badge>
-                </DialogDescription>
+                <div className="text-sm text-muted-foreground">
+                    <span>{jd.family}</span>
+                    <span className="mx-2">|</span>
+                    <span>Version: {jd.version}</span>
+                    <span className="mx-2">|</span>
+                    <span>Status: </span>
+                    <Badge variant={getBadgeVariant(jd.status)}>{jd.status}</Badge>
+                </div>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-2">
