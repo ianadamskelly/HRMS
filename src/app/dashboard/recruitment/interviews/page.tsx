@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Video } from "lucide-react";
+import { PlusCircle, Video, Check, ChevronsUpDown, X as XIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -36,6 +36,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+
 
 const upcomingInterviews = [
   {
@@ -67,6 +71,14 @@ const upcomingInterviews = [
   },
 ];
 
+const managers = [
+    { value: 'alice', label: 'Alice Johnson' },
+    { value: 'bob', label: 'Bob Brown' },
+    { value: 'charlie', label: 'Charlie Davis' },
+    { value: 'david', label: 'David Wilson' },
+    { value: 'eve', label: 'Eve Miller' },
+]
+
 const getBadgeVariant = (status: string) => {
     switch (status) {
         case "Scheduled":
@@ -79,6 +91,8 @@ const getBadgeVariant = (status: string) => {
 }
 
 function ScheduleInterviewDialog() {
+    const [selectedInterviewers, setSelectedInterviewers] = useState<string[]>([]);
+
     return (
         <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
@@ -132,8 +146,74 @@ function ScheduleInterviewDialog() {
                     </div>
                 </div>
                  <div className="space-y-2">
-                    <Label htmlFor="interviewers">Interviewers</Label>
-                    <Input id="interviewers" placeholder="e.g. Alice, Bob (comma separated)" />
+                    <Label>Interviewers</Label>
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                className="w-full justify-between"
+                            >
+                                <span className="truncate">
+                                {selectedInterviewers.length > 0
+                                    ? selectedInterviewers
+                                        .map(val => managers.find(m => m.value === val)?.label)
+                                        .join(', ')
+                                    : "Select interviewers..."}
+                                </span>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                <CommandInput placeholder="Search managers..." />
+                                <CommandList>
+                                    <CommandEmpty>No managers found.</CommandEmpty>
+                                    <CommandGroup>
+                                        {managers.map((manager) => (
+                                            <CommandItem
+                                                key={manager.value}
+                                                onSelect={() => {
+                                                    setSelectedInterviewers(current => 
+                                                        current.includes(manager.value)
+                                                            ? current.filter(val => val !== manager.value)
+                                                            : [...current, manager.value]
+                                                    )
+                                                }}
+                                            >
+                                                <Check
+                                                    className={cn(
+                                                        "mr-2 h-4 w-4",
+                                                        selectedInterviewers.includes(manager.value) ? "opacity-100" : "opacity-0"
+                                                    )}
+                                                />
+                                                {manager.label}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                        {selectedInterviewers.map(val => {
+                            const manager = managers.find(m => m.value === val);
+                            return (
+                                <Badge
+                                    key={val}
+                                    variant="secondary"
+                                >
+                                    {manager?.label}
+                                    <button
+                                        className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                        onClick={() => setSelectedInterviewers(current => current.filter(v => v !== val))}
+                                    >
+                                      <XIcon className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                    </button>
+                                </Badge>
+                            );
+                        })}
+                    </div>
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="notes">Notes / Instructions</Label>
