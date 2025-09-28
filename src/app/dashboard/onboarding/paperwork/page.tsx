@@ -1,3 +1,7 @@
+
+'use client';
+
+import { useState } from 'react';
 import { DashboardHeader } from "@/components/dashboard-header";
 import {
     Card,
@@ -21,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const onboardingTasks = [
+const initialTasks = [
     { id: "task1", label: "Complete HR paperwork (W-4, I-9)", completed: true },
     { id: "task2", label: "Set up work email and accounts", completed: true },
     { id: "task3", label: "Attend company orientation", completed: true },
@@ -46,9 +50,19 @@ const documentRepository = [
 
 
 export default function PaperworkPage() {
-    const completedTasks = onboardingTasks.filter(task => task.completed).length;
-    const totalTasks = onboardingTasks.length;
-    const progressPercentage = (completedTasks / totalTasks) * 100;
+    const [tasks, setTasks] = useState(initialTasks);
+    
+    const completedTasks = tasks.filter(task => task.completed).length;
+    const totalTasks = tasks.length;
+    const progressPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+    const handleTaskChange = (taskId: string) => {
+        setTasks(prevTasks => 
+            prevTasks.map(task => 
+                task.id === taskId ? { ...task, completed: !task.completed } : task
+            )
+        );
+    };
 
     return (
         <div className="flex flex-col h-full">
@@ -74,10 +88,17 @@ export default function PaperworkPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {onboardingTasks.map(task => (
+                            {tasks.map(task => (
                                 <div key={task.id} className="flex items-center space-x-3">
-                                    <Checkbox id={task.id} checked={task.completed} />
-                                    <Label htmlFor={task.id} className={`${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+                                    <Checkbox 
+                                        id={task.id} 
+                                        checked={task.completed} 
+                                        onCheckedChange={() => handleTaskChange(task.id)}
+                                    />
+                                    <Label 
+                                        htmlFor={task.id} 
+                                        className={`cursor-pointer ${task.completed ? 'line-through text-muted-foreground' : ''}`}
+                                    >
                                         {task.label}
                                     </Label>
                                 </div>
