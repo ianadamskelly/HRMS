@@ -1,3 +1,7 @@
+
+'use client';
+
+import { useState } from "react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import {
   Card,
@@ -5,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -17,6 +22,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Video } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 const upcomingInterviews = [
   {
@@ -59,6 +78,77 @@ const getBadgeVariant = (status: string) => {
     }
 }
 
+function ScheduleInterviewDialog() {
+    return (
+        <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+                <DialogTitle>Schedule Interview</DialogTitle>
+                <DialogDescription>
+                    Coordinate a new interview for a candidate. An invitation will be sent to all parties.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="candidate-name">Candidate</Label>
+                    <Input id="candidate-name" placeholder="Enter candidate name" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="role">Role</Label>
+                        <Select>
+                            <SelectTrigger id="role">
+                                <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="swe">Software Engineer</SelectItem>
+                                <SelectItem value="pm">Product Manager</SelectItem>
+                                <SelectItem value="ux">UX Designer</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="interview-stage">Interview Stage</Label>
+                         <Select>
+                            <SelectTrigger id="interview-stage">
+                                <SelectValue placeholder="Select stage" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="screening">Initial Screening</SelectItem>
+                                <SelectItem value="technical">Technical Round</SelectItem>
+                                <SelectItem value="manager">Hiring Manager</SelectItem>
+                                <SelectItem value="final">Final Round / On-site</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="date">Date</Label>
+                        <Input id="date" type="date" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="time">Time</Label>
+                        <Input id="time" type="time" />
+                    </div>
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="interviewers">Interviewers</Label>
+                    <Input id="interviewers" placeholder="e.g. Alice, Bob (comma separated)" />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="notes">Notes / Instructions</Label>
+                    <Textarea id="notes" placeholder="Include any specific instructions for the interviewers or candidate."/>
+                </div>
+            </div>
+            <DialogFooter>
+                 <DialogClose asChild>
+                    <Button type="submit">Schedule Interview</Button>
+                </DialogClose>
+            </DialogFooter>
+        </DialogContent>
+    )
+}
+
 export default function InterviewsPage() {
   return (
     <div className="flex flex-col h-full">
@@ -72,10 +162,15 @@ export default function InterviewsPage() {
                 Schedule, manage, and evaluate candidate interviews.
               </CardDescription>
             </div>
-            <Button>
-              <PlusCircle className="mr-2" />
-              Schedule Interview
-            </Button>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2" />
+                        Schedule Interview
+                    </Button>
+                </DialogTrigger>
+                <ScheduleInterviewDialog />
+            </Dialog>
           </CardHeader>
           <CardContent>
             <Table>
