@@ -127,7 +127,6 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
     const [step, setStep] = useState(1);
     const [startDate, setStartDate] = useState<Date>();
     const [dob, setDob] = useState<Date>();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
     
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
     const [payGrades, setPayGrades] = useState<{ id: string; name: string }[]>([]);
@@ -171,7 +170,6 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
         if (onEmployeeCreated) {
             onEmployeeCreated();
         }
-        setIsDialogOpen(false); // Close dialog on creation
     };
 
     return (
