@@ -21,6 +21,9 @@ const LOCATIONS_COLLECTION = "locations";
 const ROLES_COLLECTION = "roles";
 const PAY_GRADES_COLLECTION = "payGrades";
 const JOB_DESCRIPTIONS_COLLECTION = "jobDescriptions";
+const REQUISITIONS_COLLECTION = "requisitions";
+const REFERRALS_COLLECTION = "referrals";
+const TALENT_POOL_COLLECTION = "talentPool";
 
 
 export type JobDescription = {
@@ -33,6 +36,30 @@ export type JobDescription = {
     version: string;
     status: "Draft" | "In Review" | "Approved";
 };
+
+export type Requisition = {
+    id: string;
+    title: string;
+    budget: string;
+    status: "Draft" | "Open" | "Filled" | "Canceled";
+    posted: string;
+};
+
+export type Referral = {
+    id: string;
+    employee: string;
+    candidate: string;
+    status: "New Submission" | "Interviewing" | "Hired" | "Rejected";
+    bonus: string;
+}
+
+export type TalentPoolCandidate = {
+    id: string;
+    name: string;
+    role: string;
+    skills: string;
+    location: string;
+}
 
 
 // Organization Profile
@@ -156,4 +183,65 @@ export const addJobDescription = async (jd: Omit<JobDescription, 'id'>) => {
     await addDoc(collection(db, JOB_DESCRIPTIONS_COLLECTION), jd);
 };
 
-    
+// Requisitions
+export const getRequisitions = async () => {
+    const q = query(collection(db, REQUISITIONS_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const addRequisition = async (requisition: Omit<Requisition, 'id'>) => {
+    await addDoc(collection(db, REQUISITIONS_COLLECTION), requisition);
+};
+
+export const updateRequisition = async (id: string, requisition: Partial<Requisition>) => {
+    const docRef = doc(db, REQUISITIONS_COLLECTION, id);
+    await updateDoc(docRef, requisition);
+};
+
+export const deleteRequisition = async (id: string) => {
+    const docRef = doc(db, REQUISITIONS_COLLECTION, id);
+    await deleteDoc(docRef);
+};
+
+// Referrals
+export const getReferrals = async () => {
+    const q = query(collection(db, REFERRALS_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const addReferral = async (referral: Omit<Referral, 'id'>) => {
+    await addDoc(collection(db, REFERRALS_COLLECTION), referral);
+};
+
+export const updateReferral = async (id: string, referral: Partial<Referral>) => {
+    const docRef = doc(db, REFERRALS_COLLECTION, id);
+    await updateDoc(docRef, referral);
+};
+
+export const deleteReferral = async (id: string) => {
+    const docRef = doc(db, REFERRALS_COLLECTION, id);
+    await deleteDoc(docRef);
+};
+
+// Talent Pool
+export const getTalentPool = async () => {
+    const q = query(collection(db, TALENT_POOL_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+};
+
+export const addTalentPoolCandidate = async (candidate: Omit<TalentPoolCandidate, 'id'>) => {
+    await addDoc(collection(db, TALENT_POOL_COLLECTION), candidate);
+};
+
+export const updateTalentPoolCandidate = async (id: string, candidate: Partial<TalentPoolCandidate>) => {
+    const docRef = doc(db, TALENT_POOL_COLLECTION, id);
+    await updateDoc(docRef, candidate);
+};
+
+export const deleteTalentPoolCandidate = async (id: string) => {
+    const docRef = doc(db, TALENT_POOL_COLLECTION, id);
+    await deleteDoc(docRef);
+};

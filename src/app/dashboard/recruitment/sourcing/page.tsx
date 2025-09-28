@@ -1,7 +1,11 @@
+
+'use client';
+
+import { useState, useEffect } from "react";
 import { DashboardHeader } from "@/components/dashboard-header";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Linkedin, Briefcase, Share2, Users, FileText } from "lucide-react";
+import { PlusCircle, Linkedin, Briefcase, Share2, Users, FileText, Loader2, Edit, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -11,63 +15,142 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-
-const requisitions = [
-  {
-    title: "Senior Software Engineer",
-    status: "Open",
-    budget: "$150,000",
-    posted: "LinkedIn, Indeed",
-  },
-  {
-    title: "Product Manager",
-    status: "Filled",
-    budget: "$140,000",
-    posted: "Internal",
-  },
-  {
-    title: "UX/UI Designer",
-    status: "Draft",
-    budget: "$120,000",
-    posted: "Not Posted",
-  },
-    {
-    title: "Data Scientist",
-    status: "Canceled",
-    budget: "$160,000",
-    posted: "Not Posted",
-  },
-];
-
-const referrals = [
-    { employee: "Alice Johnson", candidate: "David Chen", status: "Hired", bonus: "$2,000" },
-    { employee: "Bob Williams", candidate: "Emily Rodriguez", status: "Interviewing", bonus: "$2,000" },
-    { employee: "Charlie Brown", candidate: "Frank Miller", status: "New Submission", bonus: "$1,500" },
-]
-
-const talentPool = [
-    { name: "Grace Lee", role: "Software Engineer", skills: "React, Node.js", location: "Remote" },
-    { name: "Henry Wilson", role: "Product Manager", skills: "Agile, Roadmapping", location: "New York, NY" },
-]
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { 
+    getRequisitions, addRequisition, updateRequisition, deleteRequisition, type Requisition,
+    getReferrals, addReferral, updateReferral, deleteReferral, type Referral,
+    getTalentPool, addTalentPoolCandidate, updateTalentPoolCandidate, deleteTalentPoolCandidate, type TalentPoolCandidate
+} from "@/firebase/firestore";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 const getBadgeVariant = (status: string) => {
   switch (status) {
-    case "Open":
-      return "default";
-    case "Filled":
-      return "secondary";
-    case "Draft":
-        return "outline";
-    case "Canceled":
-        return "destructive";
-    default:
-      return "outline";
+    case "Open": return "default";
+    case "Filled": return "secondary";
+    case "Draft": return "outline";
+    case "Canceled": return "destructive";
+    case "Hired": return "default";
+    case "Interviewing": return "secondary";
+    case "New Submission": return "outline";
+    default: return "outline";
   }
 };
 
 
+function AddEditRequisitionDialog({ requisition, onSave }: { requisition?: Requisition | null, onSave: () => void }) {
+    const [title, setTitle] = useState(requisition ? requisition.title : "");
+    const [budget, setBudget] = useState(requisition ? requisition.budget : "");
+    const [status, setStatus] = useState(requisition ? requisition.status : "Draft");
+    const [isSaving, setIsSaving] = useState(false);
+    const { toast } = useToast();
+
+    const handleSave = async () => {
+        if (!title) {
+            toast({ variant: "destructive", title: "Title is required." });
+            return;
+        }
+        setIsSaving(true);
+        const data = { title, budget, status, posted: requisition?.posted || "Not Posted" };
+        try {
+            if (requisition) {
+                await updateRequisition(requisition.id, data);
+                toast({ title: "Requisition updated successfully!" });
+            } else {
+                await addRequisition(data);
+                toast({ title: "Requisition created successfully!" });
+            }
+            onSave();
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error saving requisition." });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+    
+    return (
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{requisition ? 'Edit' : 'Create'} Requisition</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                    <Label htmlFor="req-title">Position Title</Label>
+                    <Input id="req-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="req-budget">Budget</Label>
+                    <Input id="req-budget" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="$150,000" />
+                </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="req-status">Status</Label>
+                    <Select value={status} onValueChange={setStatus}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Draft">Draft</SelectItem>
+                            <SelectItem value="Open">Open</SelectItem>
+                            <SelectItem value="Filled">Filled</SelectItem>
+                            <SelectItem value="Canceled">Canceled</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button variant="secondary">Cancel</Button></DialogClose>
+                <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    )
+}
+
 export default function SourcingPage() {
+    const [requisitions, setRequisitions] = useState<Requisition[]>([]);
+    const [referrals, setReferrals] = useState<Referral[]>([]);
+    const [talentPool, setTalentPool] = useState<TalentPoolCandidate[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const { toast } = useToast();
+
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const [reqs, refs, pool] = await Promise.all([
+                getRequisitions(),
+                getReferrals(),
+                getTalentPool()
+            ]);
+            setRequisitions(reqs as Requisition[]);
+            setReferrals(refs as Referral[]);
+            setTalentPool(pool as TalentPoolCandidate[]);
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error fetching sourcing data."});
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+
+    const handleDeleteRequisition = async (id: string) => {
+        try {
+            await deleteRequisition(id);
+            toast({ title: "Requisition deleted." });
+            fetchData();
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error deleting requisition." });
+        }
+    };
+
+
   return (
     <div className="flex flex-col h-full">
       <DashboardHeader title="Recruitment" />
@@ -80,11 +163,13 @@ export default function SourcingPage() {
                 <CardTitle className="font-headline flex items-center gap-2"><FileText /> Requisition Management</CardTitle>
                 <CardDescription>Create and track official open positions.</CardDescription>
             </div>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" /> Create Requisition
-            </Button>
+            <Dialog onOpenChange={(isOpen) => !isOpen && fetchData()}>
+                <DialogTrigger asChild><Button><PlusCircle className="mr-2 h-4 w-4" /> Create Requisition</Button></DialogTrigger>
+                <AddEditRequisitionDialog onSave={fetchData} />
+            </Dialog>
           </CardHeader>
           <CardContent>
+            {isLoading ? <Loader2 className="animate-spin" /> : (
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -92,19 +177,38 @@ export default function SourcingPage() {
                         <TableHead>Status</TableHead>
                         <TableHead>Budget</TableHead>
                         <TableHead>Posted To</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {requisitions.map((req, index) => (
-                        <TableRow key={index}>
+                    {requisitions.map((req) => (
+                        <TableRow key={req.id}>
                             <TableCell className="font-medium">{req.title}</TableCell>
                             <TableCell><Badge variant={getBadgeVariant(req.status)}>{req.status}</Badge></TableCell>
                             <TableCell>{req.budget}</TableCell>
                             <TableCell>{req.posted}</TableCell>
+                            <TableCell className="text-right">
+                                <Dialog>
+                                    <DialogTrigger asChild><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button></DialogTrigger>
+                                    <AddEditRequisitionDialog requisition={req} onSave={fetchData} />
+                                </Dialog>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button></AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle></AlertDialogHeader>
+                                        <AlertDialogDescription>This will permanently delete this requisition.</AlertDialogDescription>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleDeleteRequisition(req.id)}>Delete</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
             </Table>
+            )}
           </CardContent>
         </Card>
 
@@ -133,6 +237,7 @@ export default function SourcingPage() {
                 </Button>
             </CardHeader>
             <CardContent>
+                 {isLoading ? <Loader2 className="animate-spin" /> : (
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -143,16 +248,17 @@ export default function SourcingPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {referrals.map((ref, index) => (
-                            <TableRow key={index}>
+                        {referrals.map((ref) => (
+                            <TableRow key={ref.id}>
                                 <TableCell>{ref.employee}</TableCell>
                                 <TableCell>{ref.candidate}</TableCell>
-                                <TableCell><Badge variant={ref.status === 'Hired' ? 'default' : 'outline'}>{ref.status}</Badge></TableCell>
+                                <TableCell><Badge variant={getBadgeVariant(ref.status)}>{ref.status}</Badge></TableCell>
                                 <TableCell>{ref.bonus}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
+                 )}
             </CardContent>
         </Card>
 
@@ -166,6 +272,7 @@ export default function SourcingPage() {
                  <Button variant="outline">Manage Segments</Button>
             </CardHeader>
             <CardContent>
+                 {isLoading ? <Loader2 className="animate-spin" /> : (
                  <Table>
                     <TableHeader>
                         <TableRow>
@@ -176,8 +283,8 @@ export default function SourcingPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {talentPool.map((candidate, index) => (
-                            <TableRow key={index}>
+                        {talentPool.map((candidate) => (
+                            <TableRow key={candidate.id}>
                                 <TableCell>{candidate.name}</TableCell>
                                 <TableCell>{candidate.role}</TableCell>
                                 <TableCell>{candidate.skills}</TableCell>
@@ -186,6 +293,7 @@ export default function SourcingPage() {
                         ))}
                     </TableBody>
                 </Table>
+                )}
             </CardContent>
         </Card>
         
