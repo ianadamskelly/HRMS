@@ -183,6 +183,17 @@ export const addJobDescription = async (jd: Omit<JobDescription, 'id'>) => {
     await addDoc(collection(db, JOB_DESCRIPTIONS_COLLECTION), jd);
 };
 
+export const updateJobDescription = async (id: string, jd: Partial<Omit<JobDescription, 'id'>>) => {
+    const docRef = doc(db, JOB_DESCRIPTIONS_COLLECTION, id);
+    await updateDoc(docRef, jd);
+};
+
+export const deleteJobDescription = async (id: string) => {
+    const docRef = doc(db, JOB_DESCRIPTIONS_COLLECTION, id);
+    await deleteDoc(docRef);
+};
+
+
 // Requisitions
 export const getRequisitions = async () => {
     const q = query(collection(db, REQUISITIONS_COLLECTION));
