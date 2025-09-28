@@ -15,30 +15,6 @@ service cloud.firestore {
     function isEmployee() {
       return request.auth.token.role == 'Employee';
     }
-
-    // Organization data:
-    // - Authenticated users can read.
-    // - Admins and Managers can write.
-    match /organization/{docId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin() || isManager();
-    }
-    
-    // Departments, Locations, and PayGrades:
-    // - Authenticated users can read.
-    // - Admins and Managers can manage.
-    match /departments/{deptId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if isAdmin() || isManager();
-    }
-    match /locations/{locId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if isAdmin() || isManager();
-    }
-    match /payGrades/{gradeId} {
-      allow read: if request.auth != null;
-      allow create, update, delete: if isAdmin() || isManager();
-    }
     
     // Employee collection:
     // - Admins can read/write all employee records.
@@ -56,7 +32,35 @@ service cloud.firestore {
     // - Authenticated users can read role definitions.
     match /roles/{roleId} {
       allow read: if request.auth != null;
-      allow create, update, delete: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Organization settings:
+    // - Admins and Managers can manage these settings.
+    // - All authenticated users can read them.
+    match /organization/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin() || isManager();
+    }
+    match /departments/{docId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin() || isManager();
+    }
+    match /locations/{docId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin() || isManager();
+    }
+    match /payGrades/{docId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin() || isManager();
+    }
+    
+    // Job Descriptions:
+    // - Admins and Managers can manage JDs.
+    // - All authenticated users can read them.
+    match /jobDescriptions/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin() || isManager();
     }
 
     // Default deny all other collections

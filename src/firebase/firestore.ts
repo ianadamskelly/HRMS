@@ -1,4 +1,5 @@
 
+
 import { 
     collection, 
     doc, 
@@ -19,6 +20,20 @@ const DEPARTMENTS_COLLECTION = "departments";
 const LOCATIONS_COLLECTION = "locations";
 const ROLES_COLLECTION = "roles";
 const PAY_GRADES_COLLECTION = "payGrades";
+const JOB_DESCRIPTIONS_COLLECTION = "jobDescriptions";
+
+
+export type JobDescription = {
+    id: string;
+    title: string;
+    family: string;
+    duties: string;
+    qualifications: string;
+    salaryRange: string;
+    version: string;
+    status: "Draft" | "In Review" | "Approved";
+};
+
 
 // Organization Profile
 export const getOrganizationProfile = async () => {
@@ -128,6 +143,17 @@ export const updatePayGrade = async (id: string, payGrade: { name: string; minSa
 export const deletePayGrade = async (id: string) => {
     const docRef = doc(db, PAY_GRADES_COLLECTION, id);
     await deleteDoc(docRef);
+};
+
+// Job Descriptions
+export const getJobDescriptions = async (): Promise<JobDescription[]> => {
+    const q = query(collection(db, JOB_DESCRIPTIONS_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JobDescription));
+};
+
+export const addJobDescription = async (jd: Omit<JobDescription, 'id'>) => {
+    await addDoc(collection(db, JOB_DESCRIPTIONS_COLLECTION), jd);
 };
 
     
