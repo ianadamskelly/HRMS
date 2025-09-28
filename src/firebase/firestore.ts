@@ -129,3 +129,5 @@ export const deletePayGrade = async (id: string) => {
     const docRef = doc(db, PAY_GRADES_COLLECTION, id);
     await deleteDoc(docRef);
 };
+
+    
