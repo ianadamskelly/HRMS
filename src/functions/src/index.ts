@@ -107,22 +107,15 @@ export const createNewUser = onCall(async (request) => {
       status: "Active",
     });
     
-    // 4. Generate a password reset link (serves as a welcome/setup email)
-    const link = await admin.auth().generatePasswordResetLink(email);
-    // In a real app, you would use a proper email service here (e.g., SendGrid, Mailgun).
-    // For now, we just log the link to the function logs.
-    console.log(`Password reset link for ${email}: ${link}`);
-
-
+    // 4. Return the temporary password to the client
     return {
       success: true,
-      message: `Successfully created user ${fullName} (${email}). A password reset link has been logged.`,
+      message: `Successfully created user ${fullName} (${email}).`,
       uid: userRecord.uid,
+      tempPassword: tempPassword,
     };
   } catch (error: any) {
     console.error("Error creating new user:", error);
-    // If user creation failed in auth, re-throw.
-    // If it failed after auth, we might need cleanup logic.
     throw new HttpsError("internal", error.message);
   }
 });

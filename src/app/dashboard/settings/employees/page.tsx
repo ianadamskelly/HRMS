@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, ArrowRight, ArrowLeft, Calendar as CalendarIcon, Upload, Loader2 } from "lucide-react";
+import { PlusCircle, Search, ArrowRight, ArrowLeft, Calendar as CalendarIcon, Upload, Loader2, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,7 @@ import { getDepartments, getPayGrades, getEmployees, type Employee } from '@/fir
 import { functions } from '@/firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from '@/components/ui/alert-dialog';
 
 
 const locations = ["New York, NY", "San Francisco, CA", "Remote"];
@@ -89,7 +90,9 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
     const [dob, setDob] = useState<Date>();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
-    const [isDialogOpen, setIsDialogOpen] = useState(true);
+    const [isDialogOpen, setIsDialogOpen] = useState(false); // To control the main wizard dialog
+    const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
+    const [newEmployeeCredentials, setNewEmployeeCredentials] = useState({ email: '', tempPassword: '' });
 
     
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
@@ -178,11 +181,13 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
 
         try {
             const result: any = await createNewUser(employeeData);
+            setNewEmployeeCredentials({ email: email, tempPassword: result.data.tempPassword });
+            setIsSuccessDialogOpen(true);
             toast({ title: "Employee created successfully!", description: result.data.message });
             if (onEmployeeCreated) {
                 onEmployeeCreated();
             }
-            setIsDialogOpen(false); // Close dialog on success
+            setIsDialogOpen(false); // Close main wizard
         } catch (error: any) {
             console.error("Error creating employee:", error);
             toast({ variant: 'destructive', title: 'Error creating employee', description: error.message });
@@ -191,167 +196,209 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
         }
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ title: 'Copied to clipboard!' });
+    };
+
     return (
-        <DialogContent className="sm:max-w-2xl">
-            <DialogHeader>
-                <DialogTitle className="font-headline">Add New Employee</DialogTitle>
-                <DialogDescription>
-                   Step {step} of {steps.length}: {steps[step - 1].title}
-                </DialogDescription>
-            </DialogHeader>
-            <Progress value={progress} className="w-full" />
-            <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-4">
-                {step === 1 && (
+        <>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button>
+                        <PlusCircle className="mr-2" />
+                        Add Employee
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="font-headline">Add New Employee</DialogTitle>
+                        <DialogDescription>
+                        Step {step} of {steps.length}: {steps[step - 1].title}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Progress value={progress} className="w-full" />
+                    <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-4">
+                        {step === 1 && (
+                            <div className="space-y-4">
+                                <h3 className="font-semibold">Initiate Profile</h3>
+                                <div className="space-y-2">
+                                    <Label htmlFor="employee-id">Employee ID</Label>
+                                    <Input id="employee-id" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Leave blank to auto-generate" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="full-name">Full Name <span className="text-destructive">*</span></Label>
+                                    <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Doe" required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Contact Email <span className="text-destructive">*</span></Label>
+                                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. john.doe@email.com" required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="role">Role <span className="text-destructive">*</span></Label>
+                                    <Select value={role} onValueChange={setRole} required>
+                                        <SelectTrigger id="role"><SelectValue placeholder="Select role" /></SelectTrigger>
+                                        <SelectContent>{roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        )}
+                        {step === 2 && (
+                            <div className="space-y-4">
+                                <div className="space-y-1">
+                                    <h3 className="font-semibold">Personal Data</h3>
+                                    <p className="text-sm text-muted-foreground">This information is optional but helps complete the employee's profile.</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Date of Birth</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !dob && "text-muted-foreground")}>
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {dob ? format(dob, "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dob} onSelect={setDob} captionLayout="dropdown-buttons" fromYear={1960} toYear={2010} /></PopoverContent>
+                                        </Popover>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="phone">Contact Phone</Label>
+                                        <Input id="phone" type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="e.g. +1 123 456 7890" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2 border-t pt-4">
+                                    <h4 className="font-medium">Emergency Contact</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <Input placeholder="Contact Name" value={emergencyContactName} onChange={(e) => setEmergencyContactName(e.target.value)} />
+                                        <Input placeholder="Relationship" value={emergencyContactRelationship} onChange={(e) => setEmergencyContactRelationship(e.target.value)}/>
+                                        <Input placeholder="Contact Phone" value={emergencyContactPhone} onChange={(e) => setEmergencyContactPhone(e.target.value)} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {step === 3 && (
+                            <div className="space-y-4">
+                                <h3 className="font-semibold">Organizational Data</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="job-title">Job Title</Label>
+                                        <Input id="job-title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. Software Engineer" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="department">Department</Label>
+                                        <Select value={department} onValueChange={setDepartment}><SelectTrigger id="department"><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="manager">Manager</Label>
+                                        <Select value={manager} onValueChange={setManager}><SelectTrigger id="manager"><SelectValue placeholder="Select manager" /></SelectTrigger><SelectContent>{employees.filter(e => e.status === 'Active').map(e => <SelectItem key={e.id} value={e.fullName}>{e.fullName}</SelectItem>)}</SelectContent></Select>
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <Label>Start Date (Original Hire Date)</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} /></PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {step === 4 && (
+                            <div className="space-y-4">
+                                <h3 className="font-semibold">Compensation Data</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="salary">Base Salary / Pay Rate</Label>
+                                        <Input id="salary" type="number" value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="e.g. 90000" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="pay-grade">Pay Grade/Band</Label>
+                                        <Select value={payGrade} onValueChange={setPayGrade}><SelectTrigger id="pay-grade"><SelectValue placeholder="Select grade" /></SelectTrigger><SelectContent>{payGrades.map(g => <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>)}</SelectContent></Select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {step === 5 && (
+                            <div className="space-y-4">
+                                <h3 className="font-semibold">Compliance Data (Optional)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="tax-jurisdiction">Tax Jurisdiction</Label>
+                                        <Input id="tax-jurisdiction" value={taxJurisdiction} onChange={(e) => setTaxJurisdiction(e.target.value)} placeholder="e.g. USA/California" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bank-details">Bank Details (for Payroll)</Label>
+                                        <Input id="bank-details" value={bankDetails} onChange={(e) => setBankDetails(e.target.value)} placeholder="e.g. Bank Name, Account Number" />
+                                    </div>
+                                </div>
+                                <div className="space-y-2 pt-4">
+                                    <Label>Upload Documents</Label>
+                                    <div className="flex items-center gap-2 p-4 border-2 border-dashed rounded-lg">
+                                        <Upload className="h-6 w-6 text-muted-foreground" />
+                                        <Input id="document-upload" type="file" multiple className="text-sm border-none shadow-none pl-0 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <DialogFooter className="justify-between">
+                        <div>
+                        {step > 1 && (
+                                <Button variant="outline" onClick={prevStep} disabled={isSaving}>
+                                    <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+                                </Button>
+                            )}
+                        </div>
+                        <div>
+                            {step < steps.length ? (
+                                <Button onClick={nextStep}>
+                                    Next <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                            ) : (
+                                <Button onClick={handleCreateEmployee} disabled={isSaving}>
+                                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Create Employee Profile
+                                </Button>
+                            )}
+                        </div>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <AlertDialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Employee Created Successfully!</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Please securely share the following temporary credentials with the new employee. They will be required to change their password upon first login.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
                     <div className="space-y-4">
-                        <h3 className="font-semibold">Initiate Profile</h3>
                         <div className="space-y-2">
-                            <Label htmlFor="employee-id">Employee ID</Label>
-                            <Input id="employee-id" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Leave blank to auto-generate" />
+                            <Label>Email</Label>
+                            <p className="font-mono text-sm p-2 bg-muted rounded-md">{newEmployeeCredentials.email}</p>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="full-name">Full Name <span className="text-destructive">*</span></Label>
-                            <Input id="full-name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. John Doe" required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Contact Email <span className="text-destructive">*</span></Label>
-                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. john.doe@email.com" required />
-                        </div>
-                         <div className="space-y-2">
-                            <Label htmlFor="role">Role <span className="text-destructive">*</span></Label>
-                            <Select value={role} onValueChange={setRole} required>
-                                <SelectTrigger id="role"><SelectValue placeholder="Select role" /></SelectTrigger>
-                                <SelectContent>{roles.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                )}
-                {step === 2 && (
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="font-semibold">Personal Data</h3>
-                            <p className="text-sm text-muted-foreground">This information is optional but helps complete the employee's profile.</p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Date of Birth</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !dob && "text-muted-foreground")}>
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {dob ? format(dob, "PPP") : <span>Pick a date</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dob} onSelect={setDob} captionLayout="dropdown-buttons" fromYear={1960} toYear={2010} /></PopoverContent>
-                                </Popover>
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="phone">Contact Phone</Label>
-                                <Input id="phone" type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="e.g. +1 123 456 7890" />
-                            </div>
-                        </div>
-                         <div className="space-y-2 border-t pt-4">
-                            <h4 className="font-medium">Emergency Contact</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <Input placeholder="Contact Name" value={emergencyContactName} onChange={(e) => setEmergencyContactName(e.target.value)} />
-                                <Input placeholder="Relationship" value={emergencyContactRelationship} onChange={(e) => setEmergencyContactRelationship(e.target.value)}/>
-                                <Input placeholder="Contact Phone" value={emergencyContactPhone} onChange={(e) => setEmergencyContactPhone(e.target.value)} />
+                            <Label>Temporary Password</Label>
+                            <div className="flex items-center gap-2">
+                                <p className="font-mono text-sm p-2 bg-muted rounded-md flex-1">{newEmployeeCredentials.tempPassword}</p>
+                                <Button variant="outline" size="icon" onClick={() => copyToClipboard(newEmployeeCredentials.tempPassword)}>
+                                    <Copy className="h-4 w-4" />
+                                </Button>
                             </div>
                         </div>
                     </div>
-                )}
-                 {step === 3 && (
-                    <div className="space-y-4">
-                        <h3 className="font-semibold">Organizational Data</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div className="space-y-2">
-                                <Label htmlFor="job-title">Job Title</Label>
-                                <Input id="job-title" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. Software Engineer" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="department">Department</Label>
-                                <Select value={department} onValueChange={setDepartment}><SelectTrigger id="department"><SelectValue placeholder="Select department" /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select>
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="manager">Manager</Label>
-                                <Select value={manager} onValueChange={setManager}><SelectTrigger id="manager"><SelectValue placeholder="Select manager" /></SelectTrigger><SelectContent>{employees.filter(e => e.status === 'Active').map(e => <SelectItem key={e.id} value={e.fullName}>{e.fullName}</SelectItem>)}</SelectContent></Select>
-                            </div>
-                             <div className="space-y-2 md:col-span-2">
-                                <Label>Start Date (Original Hire Date)</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")}>
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} /></PopoverContent>
-                                </Popover>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                 {step === 4 && (
-                    <div className="space-y-4">
-                        <h3 className="font-semibold">Compensation Data</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="salary">Base Salary / Pay Rate</Label>
-                                <Input id="salary" type="number" value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="e.g. 90000" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="pay-grade">Pay Grade/Band</Label>
-                                <Select value={payGrade} onValueChange={setPayGrade}><SelectTrigger id="pay-grade"><SelectValue placeholder="Select grade" /></SelectTrigger><SelectContent>{payGrades.map(g => <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>)}</SelectContent></Select>
-                            </div>
-                        </div>
-                    </div>
-                )}
-                 {step === 5 && (
-                    <div className="space-y-4">
-                        <h3 className="font-semibold">Compliance Data (Optional)</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                             <div className="space-y-2">
-                                <Label htmlFor="tax-jurisdiction">Tax Jurisdiction</Label>
-                                <Input id="tax-jurisdiction" value={taxJurisdiction} onChange={(e) => setTaxJurisdiction(e.target.value)} placeholder="e.g. USA/California" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="bank-details">Bank Details (for Payroll)</Label>
-                                <Input id="bank-details" value={bankDetails} onChange={(e) => setBankDetails(e.target.value)} placeholder="e.g. Bank Name, Account Number" />
-                            </div>
-                        </div>
-                         <div className="space-y-2 pt-4">
-                             <Label>Upload Documents</Label>
-                            <div className="flex items-center gap-2 p-4 border-2 border-dashed rounded-lg">
-                                <Upload className="h-6 w-6 text-muted-foreground" />
-                                <Input id="document-upload" type="file" multiple className="text-sm border-none shadow-none pl-0 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-            <DialogFooter className="justify-between">
-                <div>
-                   {step > 1 && (
-                        <Button variant="outline" onClick={prevStep} disabled={isSaving}>
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Previous
-                        </Button>
-                    )}
-                </div>
-                 <div>
-                    {step < steps.length ? (
-                        <Button onClick={nextStep}>
-                            Next <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                    ) : (
-                         <DialogClose asChild>
-                            <Button onClick={handleCreateEmployee} disabled={isSaving}>
-                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Create Employee Profile
-                            </Button>
-                        </DialogClose>
-                    )}
-                 </div>
-            </DialogFooter>
-        </DialogContent>
+                    <AlertDialogFooter>
+                        <Button onClick={() => setIsSuccessDialogOpen(false)}>Close</Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     )
 }
 
@@ -388,15 +435,7 @@ export default function EmployeesPage() {
                 Manage all employee details and records.
               </CardDescription>
             </div>
-            <Dialog onOpenChange={(isOpen) => !isOpen && fetchEmployees()}>
-                <DialogTrigger asChild>
-                    <Button>
-                      <PlusCircle className="mr-2" />
-                      Add Employee
-                    </Button>
-                </DialogTrigger>
-                <AddEmployeeWizard onEmployeeCreated={fetchEmployees} />
-            </Dialog>
+            <AddEmployeeWizard onEmployeeCreated={fetchEmployees} />
           </CardHeader>
           <CardContent>
             <div className="relative mb-4">
@@ -452,4 +491,3 @@ export default function EmployeesPage() {
     </div>
   );
 }
-
