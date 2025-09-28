@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -88,6 +89,7 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
     const [dob, setDob] = useState<Date>();
     const { toast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
+    const [isDialogOpen, setIsDialogOpen] = useState(true);
 
     
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
@@ -172,15 +174,15 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                 taxJurisdiction,
                 bankDetails
             },
-            status: "Active"
         };
 
         try {
-            const result = await createNewUser(employeeData);
-            toast({ title: "Employee created successfully!", description: `An invitation email has been sent to ${email}.` });
+            const result: any = await createNewUser(employeeData);
+            toast({ title: "Employee created successfully!", description: result.data.message });
             if (onEmployeeCreated) {
                 onEmployeeCreated();
             }
+            setIsDialogOpen(false); // Close dialog on success
         } catch (error: any) {
             console.error("Error creating employee:", error);
             toast({ variant: 'destructive', title: 'Error creating employee', description: error.message });
@@ -450,3 +452,4 @@ export default function EmployeesPage() {
     </div>
   );
 }
+
