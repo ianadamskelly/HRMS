@@ -1,5 +1,3 @@
-
-
 import { 
     collection, 
     doc, 
@@ -24,6 +22,7 @@ const JOB_DESCRIPTIONS_COLLECTION = "jobDescriptions";
 const REQUISITIONS_COLLECTION = "requisitions";
 const REFERRALS_COLLECTION = "referrals";
 const TALENT_POOL_COLLECTION = "talentPool";
+const EMPLOYEES_COLLECTION = "employees";
 
 
 export type JobDescription = {
@@ -60,6 +59,16 @@ export type TalentPoolCandidate = {
     skills: string;
     location: string;
 }
+
+export type Employee = {
+  id: string;
+  employeeId?: string;
+  fullName: string;
+  email: string;
+  jobTitle: string;
+  department: string;
+  status: "Active" | "On Leave" | "Terminated";
+};
 
 
 // Organization Profile
@@ -256,3 +265,10 @@ export const deleteTalentPoolCandidate = async (id: string) => {
     const docRef = doc(db, TALENT_POOL_COLLECTION, id);
     await deleteDoc(docRef);
 };
+
+// Employees
+export const getEmployees = async (): Promise<Employee[]> => {
+    const q = query(collection(db, EMPLOYEES_COLLECTION));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+}

@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Search, ArrowRight, ArrowLeft, Calendar as CalendarIcon, Upload } from "lucide-react";
+import { PlusCircle, Search, ArrowRight, ArrowLeft, Calendar as CalendarIcon, Upload, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -39,51 +39,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getDepartments, getPayGrades } from '@/firebase/firestore';
-
-
-const employeesData = [
-  {
-    id: "EMP001",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    role: "Software Engineer",
-    department: "Engineering",
-    status: "Active",
-  },
-  {
-    id: "EMP002",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    role: "Product Manager",
-    department: "Product",
-    status: "Active",
-  },
-  {
-    id: "EMP003",
-    name: "Sam Wilson",
-    email: "sam.wilson@example.com",
-    role: "UX Designer",
-    department: "Design",
-    status: "On Leave",
-  },
-    {
-    id: "EMP004",
-    name: "Alice Johnson",
-    email: "alice.j@example.com",
-    role: "Data Scientist",
-    department: "Data & Analytics",
-    status: "Active",
-  },
-    {
-    id: "EMP005",
-    name: "Bob Brown",
-    email: "bob.b@example.com",
-    role: "Software Engineer",
-    department: "Engineering",
-    status: "Terminated",
-  },
-];
+import { getDepartments, getPayGrades, getEmployees, type Employee } from '@/firebase/firestore';
+import { functions } from '@/firebase/auth';
+import { httpsCallable } from 'firebase/functions';
+import { useToast } from '@/hooks/use-toast';
 
 
 const locations = ["New York, NY", "San Francisco, CA", "Remote"];
@@ -127,18 +86,32 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
     const [step, setStep] = useState(1);
     const [startDate, setStartDate] = useState<Date>();
     const [dob, setDob] = useState<Date>();
+    const { toast } = useToast();
+    const [isSaving, setIsSaving] = useState(false);
+
     
     const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
     const [payGrades, setPayGrades] = useState<{ id: string; name: string }[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
 
 
-    // Form state for pre-filling
-    const [fullName, setFullName] = useState(initialData?.fullName || '');
-    const [email, setEmail] = useState(initialData?.email || '');
-    const [jobTitle, setJobTitle] = useState(initialData?.jobTitle || '');
-    const [department, setDepartment] = useState(initialData?.department || '');
-    const [salary, setSalary] = useState(initialData?.salary?.toString() || '');
-    const [role, setRole] = useState(initialData?.role || 'Employee');
+    // Form state
+    const [employeeId, setEmployeeId] = useState('');
+    const [fullName, setFullName] = useState('');
+    const [email, setEmail] = useState('');
+    const [role, setRole] = useState('Employee');
+    const [contactPhone, setContactPhone] = useState('');
+    const [emergencyContactName, setEmergencyContactName] = useState('');
+    const [emergencyContactRelationship, setEmergencyContactRelationship] = useState('');
+    const [emergencyContactPhone, setEmergencyContactPhone] = useState('');
+    const [jobTitle, setJobTitle] = useState('');
+    const [department, setDepartment] = useState('');
+    const [manager, setManager] = useState('');
+    const [salary, setSalary] = useState('');
+    const [payGrade, setPayGrade] = useState('');
+    const [taxJurisdiction, setTaxJurisdiction] = useState('');
+    const [bankDetails, setBankDetails] = useState('');
+
 
     useEffect(() => {
         if (initialData) {
@@ -151,24 +124,68 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
         }
 
         const fetchDropdownData = async () => {
-            const depts = await getDepartments();
-            const grades = await getPayGrades();
-            setDepartments(depts as { id: string; name: string }[]);
-            setPayGrades(grades as { id: string; name: string }[]);
+            try {
+                const [depts, grades, emps] = await Promise.all([
+                    getDepartments(),
+                    getPayGrades(),
+                    getEmployees()
+                ]);
+                setDepartments(depts as { id: string; name: string }[]);
+                setPayGrades(grades as { id: string; name: string }[]);
+                setEmployees(emps as Employee[]);
+            } catch (error) {
+                toast({ variant: 'destructive', title: 'Failed to fetch initial data.'});
+            }
         };
         fetchDropdownData();
 
-    }, [initialData]);
+    }, [initialData, toast]);
 
     const nextStep = () => setStep(prev => Math.min(prev + 1, steps.length));
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
     const progress = (step / steps.length) * 100;
 
-    const handleCreateEmployee = () => {
-        // In a real app, you would submit all collected data to your backend here
-        console.log("Creating employee...");
-        if (onEmployeeCreated) {
-            onEmployeeCreated();
+    const handleCreateEmployee = async () => {
+        setIsSaving(true);
+        const createNewUser = httpsCallable(functions, 'createNewUser');
+        const employeeData = {
+            employeeId,
+            fullName,
+            email,
+            role,
+            dob: dob ? format(dob, 'yyyy-MM-dd') : null,
+            contactPhone,
+            emergencyContact: {
+                name: emergencyContactName,
+                relationship: emergencyContactRelationship,
+                phone: emergencyContactPhone
+            },
+            jobTitle,
+            department,
+            manager,
+            startDate: startDate ? format(startDate, 'yyyy-MM-dd') : null,
+            compensation: {
+                salary: Number(salary),
+                payGrade
+            },
+            compliance: {
+                taxJurisdiction,
+                bankDetails
+            },
+            status: "Active"
+        };
+
+        try {
+            const result = await createNewUser(employeeData);
+            toast({ title: "Employee created successfully!", description: `An invitation email has been sent to ${email}.` });
+            if (onEmployeeCreated) {
+                onEmployeeCreated();
+            }
+        } catch (error: any) {
+            console.error("Error creating employee:", error);
+            toast({ variant: 'destructive', title: 'Error creating employee', description: error.message });
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -181,13 +198,13 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                 </DialogDescription>
             </DialogHeader>
             <Progress value={progress} className="w-full" />
-            <div className="py-4 space-y-6">
+            <div className="py-4 space-y-6 max-h-[60vh] overflow-y-auto pr-4">
                 {step === 1 && (
                     <div className="space-y-4">
                         <h3 className="font-semibold">Initiate Profile</h3>
                         <div className="space-y-2">
                             <Label htmlFor="employee-id">Employee ID</Label>
-                            <Input id="employee-id" placeholder="Enter internal unique identifier or leave blank to auto-generate" />
+                            <Input id="employee-id" value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} placeholder="Enter internal unique identifier or leave blank to auto-generate" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="full-name">Full Name</Label>
@@ -224,15 +241,15 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="phone">Contact Phone</Label>
-                                <Input id="phone" type="tel" placeholder="e.g. +1 123 456 7890" />
+                                <Input id="phone" type="tel" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="e.g. +1 123 456 7890" />
                             </div>
                         </div>
                          <div className="space-y-2 border-t pt-4">
                             <h4 className="font-medium">Emergency Contact</h4>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <Input placeholder="Contact Name" />
-                                <Input placeholder="Relationship" />
-                                <Input placeholder="Contact Phone" />
+                                <Input placeholder="Contact Name" value={emergencyContactName} onChange={(e) => setEmergencyContactName(e.target.value)} />
+                                <Input placeholder="Relationship" value={emergencyContactRelationship} onChange={(e) => setEmergencyContactRelationship(e.target.value)}/>
+                                <Input placeholder="Contact Phone" value={emergencyContactPhone} onChange={(e) => setEmergencyContactPhone(e.target.value)} />
                             </div>
                         </div>
                     </div>
@@ -251,7 +268,7 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="manager">Manager</Label>
-                                <Select><SelectTrigger id="manager"><SelectValue placeholder="Select manager" /></SelectTrigger><SelectContent>{employeesData.filter(e => e.status === 'Active').map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent></Select>
+                                <Select value={manager} onValueChange={setManager}><SelectTrigger id="manager"><SelectValue placeholder="Select manager" /></SelectTrigger><SelectContent>{employees.filter(e => e.status === 'Active').map(e => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent></Select>
                             </div>
                              <div className="space-y-2 md:col-span-2">
                                 <Label>Start Date (Original Hire Date)</Label>
@@ -278,38 +295,29 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                             </div>
                              <div className="space-y-2">
                                 <Label htmlFor="pay-grade">Pay Grade/Band</Label>
-                                <Select><SelectTrigger id="pay-grade"><SelectValue placeholder="Select grade" /></SelectTrigger><SelectContent>{payGrades.map(g => <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>)}</SelectContent></Select>
+                                <Select value={payGrade} onValueChange={setPayGrade}><SelectTrigger id="pay-grade"><SelectValue placeholder="Select grade" /></SelectTrigger><SelectContent>{payGrades.map(g => <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>)}</SelectContent></Select>
                             </div>
                         </div>
                     </div>
                 )}
                  {step === 5 && (
                     <div className="space-y-4">
-                        <h3 className="font-semibold">Compliance Data</h3>
+                        <h3 className="font-semibold">Compliance Data (Optional)</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="i9-form">Form I-9</Label>
-                                    <Input id="i9-form" type="file" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="w4-form">Form W-4</Label>
-                                    <Input id="w4-form" type="file" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="contract">Contract</Label>
-                                    <Input id="contract" type="file" />
-                                </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="tax-jurisdiction">Tax Jurisdiction</Label>
+                                <Input id="tax-jurisdiction" value={taxJurisdiction} onChange={(e) => setTaxJurisdiction(e.target.value)} placeholder="e.g. USA/California" />
                             </div>
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="tax-jurisdiction">Tax Jurisdiction</Label>
-                                    <Input id="tax-jurisdiction" placeholder="e.g. USA/California" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="bank-details">Bank Details (for Payroll)</Label>
-                                    <Input id="bank-details" placeholder="e.g. Bank Name, Account Number" />
-                                </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="bank-details">Bank Details (for Payroll)</Label>
+                                <Input id="bank-details" value={bankDetails} onChange={(e) => setBankDetails(e.target.value)} placeholder="e.g. Bank Name, Account Number" />
+                            </div>
+                        </div>
+                         <div className="space-y-2 pt-4">
+                             <Label>Upload Documents</Label>
+                            <div className="flex items-center gap-2 p-4 border-2 border-dashed rounded-lg">
+                                <Upload className="h-6 w-6 text-muted-foreground" />
+                                <Input id="document-upload" type="file" multiple className="text-sm border-none shadow-none pl-0 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"/>
                             </div>
                         </div>
                     </div>
@@ -318,7 +326,7 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
             <DialogFooter className="justify-between">
                 <div>
                    {step > 1 && (
-                        <Button variant="outline" onClick={prevStep}>
+                        <Button variant="outline" onClick={prevStep} disabled={isSaving}>
                             <ArrowLeft className="mr-2 h-4 w-4" /> Previous
                         </Button>
                     )}
@@ -330,7 +338,10 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
                         </Button>
                     ) : (
                          <DialogClose asChild>
-                            <Button onClick={handleCreateEmployee}>Create Employee Profile</Button>
+                            <Button onClick={handleCreateEmployee} disabled={isSaving}>
+                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Create Employee Profile
+                            </Button>
                         </DialogClose>
                     )}
                  </div>
@@ -340,6 +351,26 @@ export function AddEmployeeWizard({ initialData, onEmployeeCreated }: AddEmploye
 }
 
 export default function EmployeesPage() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchEmployees = async () => {
+    setIsLoading(true);
+    try {
+      const emps = await getEmployees();
+      setEmployees(emps);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Failed to fetch employees.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
   return (
     <div className="flex flex-col h-full">
       <DashboardHeader title="Employees" />
@@ -352,14 +383,14 @@ export default function EmployeesPage() {
                 Manage all employee details and records.
               </CardDescription>
             </div>
-            <Dialog>
+            <Dialog onOpenChange={(isOpen) => !isOpen && fetchEmployees()}>
                 <DialogTrigger asChild>
                     <Button>
                       <PlusCircle className="mr-2" />
                       Add Employee
                     </Button>
                 </DialogTrigger>
-                <AddEmployeeWizard />
+                <AddEmployeeWizard onEmployeeCreated={fetchEmployees} />
             </Dialog>
           </CardHeader>
           <CardContent>
@@ -385,14 +416,20 @@ export default function EmployeesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {employeesData.map((employee) => (
+                {isLoading ? (
+                  <TableRow>
+                      <TableCell colSpan={7} className="text-center">
+                          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+                      </TableCell>
+                  </TableRow>
+                ) : employees.map((employee) => (
                   <TableRow key={employee.id}>
-                    <TableCell className="font-mono">{employee.id}</TableCell>
+                    <TableCell className="font-mono">{employee.employeeId || employee.id.substring(0,6).toUpperCase()}</TableCell>
                     <TableCell className="font-medium">
-                      {employee.name}
+                      {employee.fullName}
                     </TableCell>
                     <TableCell>{employee.email}</TableCell>
-                    <TableCell>{employee.role}</TableCell>
+                    <TableCell>{employee.jobTitle}</TableCell>
                     <TableCell>{employee.department}</TableCell>
                     <TableCell>
                       <Badge variant={getBadgeVariant(employee.status)}>{employee.status}</Badge>
