@@ -2,80 +2,70 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // Helper functions to check user roles from custom claims
+
     function isAdmin() {
       return request.auth.token.role == 'Admin';
     }
-    
+
     function isManager() {
       return request.auth.token.role == 'Manager';
     }
-    
+
     function isEmployee() {
       return request.auth.token.role == 'Employee';
     }
-    
-    // Organization, Departments, Locations, Pay Grades
+
+    // Organization data can be read by any authenticated user, but only written by admins.
     match /organization/{docId} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
-    match /departments/{docId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin() || isManager();
-    }
-     match /locations/{docId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin() || isManager();
-    }
-     match /payGrades/{docId} {
-      allow read: if request.auth != null;
-      allow write: if isAdmin() || isManager();
-    }
 
-    // Employee collection:
-    // - Admins can read/write all employee records.
-    // - Managers can read their direct reports.
-    // - Employees can read/update their own record.
-    match /employees/{userId} {
-      allow read: if isAdmin() || request.auth.uid == userId || (isManager() && get(/databases/$(database)/documents/employees/$(userId)).data.managerId == request.auth.uid);
-      allow write: if isAdmin() || request.auth.uid == userId;
-      allow create: if isAdmin();
-      allow delete: if isAdmin();
-    }
-    
-    // Roles collection:
-    // - Admins can manage roles.
-    // - Authenticated users can read role definitions.
-    match /roles/{roleId} {
+    match /departments/{docId} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
     }
 
-    // Job Descriptions
-    match /jobDescriptions/{docId} {
+    match /locations/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    match /payGrades/{docId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // Employees can be read by any authenticated user, but only written by admins.
+    match /employees/{employeeId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Roles can be read by any authenticated user, but only written by admins.
+    match /roles/{roleId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    // Recruitment data can be read by authenticated users, but only written by Admins or Managers.
+    match /jobDescriptions/{jdId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin() || isManager();
+    }
+    
+    match /requisitions/{reqId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin() || isManager();
+    }
+
+    match /referrals/{refId} {
         allow read: if request.auth != null;
         allow write: if isAdmin() || isManager();
     }
 
-    // Recruitment Collections
-    match /requisitions/{docId} {
+    match /talentPool/{tpId} {
         allow read: if request.auth != null;
         allow write: if isAdmin() || isManager();
-    }
-     match /referrals/{docId} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin() || isManager();
-    }
-     match /talentPool/{docId} {
-        allow read: if request.auth != null;
-        allow write: if isAdmin() || isManager();
-    }
-
-    // Default deny all other collections
-    match /{document=**} {
-      allow read, write: if false;
     }
   }
 }
